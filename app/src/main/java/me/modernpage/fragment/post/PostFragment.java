@@ -2,6 +2,7 @@ package me.modernpage.fragment.post;
 
 
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
@@ -26,11 +27,14 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
 import com.squareup.picasso.MemoryPolicy;
 import com.squareup.picasso.Picasso;
 
 import java.util.List;
 
+import me.modernpage.activity.GoogleMapActivity;
 import me.modernpage.activity.R;
 import me.modernpage.entity.Group;
 import me.modernpage.entity.UserEntity;
@@ -48,10 +52,9 @@ public class PostFragment extends Fragment implements GetAllGroup.OnGetAllGroup,
     private static final String TAG = "PostFragment";
     private static final int TAKEPHOTO_REQUEST = 0;
     private static final int GALLERY_IMAGE_REQUEST = 1;
-
     private static final int TAKEVIDEO_REQUEST = 2;
     private static final int GALLERY_VIDEO_REQUEST = 3;
-
+    private static final int ERROR_DIALOG_REQUEST = 9001;
 
     private Spinner mSpinner;
     private ImageView mAvatar;
@@ -148,7 +151,25 @@ public class PostFragment extends Fragment implements GetAllGroup.OnGetAllGroup,
                 }
             }
         });
+
+
+        ImageView addLocation = view.findViewById(R.id.post_add_location);
+        addLocation.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Log.d(TAG, "onClick: add location pressed");
+                if(isGoogleServiceOK()) {
+                    initGoogleMap();
+                }
+            }
+        });
+
         Log.d(TAG, "onViewCreated: ends");
+    }
+
+    private void initGoogleMap() {
+        Intent intent = new Intent(getActivity(), GoogleMapActivity.class);
+        startActivity(intent);
     }
 
     @Override
@@ -274,5 +295,23 @@ public class PostFragment extends Fragment implements GetAllGroup.OnGetAllGroup,
                 .placeholder(R.drawable.placeholder)
                 .error(R.drawable.placeholder)
                 .into(mAvatar);
+    }
+
+    private boolean isGoogleServiceOK() {
+        Log.d(TAG, "isGoogleServiceOK: checking google service version");
+        int available = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(getContext());
+        if(available == ConnectionResult.SUCCESS) {
+            Log.d(TAG, "isGoogleServiceOK: Google Plat Service is working");
+            return true;
+        } else if (GoogleApiAvailability.getInstance().isUserResolvableError(available)) {
+            Log.d(TAG, "isGoogleServiceOK: error occured but you can resolve it");
+            Dialog dialog = GoogleApiAvailability.getInstance().getErrorDialog(getActivity(),available, ERROR_DIALOG_REQUEST);
+            dialog.show();
+        } else {
+            Log.d(TAG, "isGoogleServiceOK: error occured with google service");
+            Toast.makeText(getContext(), "You can't make map requests", Toast.LENGTH_LONG).show();
+        }
+        
+        return false;
     }
 }

@@ -1,0 +1,40 @@
+<resources>
+    <string name="app_name">Make It Known</string>
+    <string name="mik">MiK</string>
+    <string name="username">username</string>
+    <string name="password">password</string>
+    <string name="forgot_password">forgot password?</string>
+    <string name="sign_in">Sign in</string>
+    <string name="don_t_have_an_account">Don\'t have an account?</string>
+    <string name="sign_up">Sign Up</string>
+    <string name="remember_me">Remember me</string>
+    <string name="fullname">full name</string>
+    <string name="email">email</string>
+    <string name="confirm_password">confirm password</string>
+    <string name="already_have_an_account">Already have an account?</string>
+    <string name="home">Home</string>
+    <string name="map">Map</string>
+    <string name="post">Post</string>
+    <string name="group">Group</string>
+    <string name="posts">Posts</string>
+    <string name="followers">Followers</string>
+    <string name="following">Following</string>
+    <string name="settings">Settings</string>
+    <string name="help_feedback"><![CDATA[Help & Feedback]]></string>
+    <string name="log_out">Log out</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="nav_open_drawer">open nav drawer</string>
+    <string name="nav_close_drawer">close nav drawer</string>
+    <string name="notification">Notification</string>
+    <string name="user_full_name">User full name</string>
+    <string name="personal_information">Personal Information</string>
+    <string name="pick_a_birthdate">Pick a birthdate</string>
+    <string name="save">Save</string>
+    <string name="title">Title</string>
+    <string name="description">Description</string>
+    <string name="send">Send</string>
+    <string name="empty_private_group">No any available private groups</string>
+    <string name="post_content_hint">What\'s on your mind?</string>
+</resources>

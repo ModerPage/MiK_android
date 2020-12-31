@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <!--
+        actionViewClass is to define dynamic count for following, followers and posts of the user
+    -->
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_profile_following"
+            android:icon="@drawable/ic_nav_profile_following"
+            android:title="@string/following"
+            app:actionViewClass="android.widget.TextView"/>
+        <item
+            android:id="@+id/nav_profile_followers"
+            android:icon="@drawable/ic_nav_profile_follower"
+            android:title="@string/followers"
+            app:actionViewClass="android.widget.TextView"/>
+        <item
+            android:id="@+id/nav_profile_posts"
+            android:icon="@drawable/ic_nav_profile_posts"
+            android:title="@string/posts"
+            app:actionViewClass="android.widget.TextView"/>
+        <item
+            android:id="@+id/nav_profile_settings"
+            android:icon="@drawable/ic_nav_profile_settings"
+            android:title="@string/settings" />
+        <item
+            android:id="@+id/nav_profile_helpfeed"
+            android:icon="@drawable/ic_nav_profile_helpfeed"
+            android:title="@string/help_feedback" />
+    </group>
+</menu>

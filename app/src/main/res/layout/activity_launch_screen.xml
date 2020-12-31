@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/white"
+    android:gravity="center"
+    android:paddingStart="50dp"
+    android:paddingEnd="50dp"
+    android:orientation="vertical"
+    tools:activity=".LaunchScreen">
+
+    <!--    <ImageView-->
+    <!--        android:layout_width="300dp"-->
+    <!--        android:layout_height="wrap_content"-->
+    <!--        android:layout_gravity="center"-->
+    <!--        android:contentDescription="launch_logo"-->
+    <!--        android:src="@drawable/launscreen_logo" />-->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/roboto_bold"
+        android:gravity="center"
+        android:text="MiK"
+        android:textColor="@color/primaryDarkColor"
+        android:textSize="36sp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/roboto_medium"
+        android:text="Make it Known"
+        android:textColor="@color/primaryDarkColor"
+        android:textSize="24sp" />
+</LinearLayout>

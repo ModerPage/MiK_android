@@ -55,6 +55,7 @@ public class PostFragment extends Fragment implements GetAllGroup.OnGetAllGroup,
     private static final int TAKEVIDEO_REQUEST = 2;
     private static final int GALLERY_VIDEO_REQUEST = 3;
     private static final int ERROR_DIALOG_REQUEST = 9001;
+    private static final int ADD_LOCATION_REQUEST = 4;
 
     private Spinner mSpinner;
     private ImageView mAvatar;
@@ -169,7 +170,7 @@ public class PostFragment extends Fragment implements GetAllGroup.OnGetAllGroup,
 
     private void initGoogleMap() {
         Intent intent = new Intent(getActivity(), GoogleMapActivity.class);
-        startActivity(intent);
+        startActivityForResult(intent, ADD_LOCATION_REQUEST);
     }
 
     @Override

@@ -39,6 +39,7 @@ import com.seatgeek.placesautocomplete.model.PlaceDetails;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import me.modernpage.PermissionUtils;
 
@@ -142,7 +143,7 @@ public class GoogleMapActivity extends AppCompatActivity implements OnMapReadyCa
 
     private void geoLocate(String searchQuery) {
         Log.d(TAG, "geoLocate: called");
-        Geocoder geocoder = new Geocoder(this);
+        Geocoder geocoder = new Geocoder(this, Locale.getDefault());
         List<Address> addressList = new ArrayList<>();
         try {
             addressList = geocoder.getFromLocationName(searchQuery, 1);
@@ -152,12 +153,29 @@ public class GoogleMapActivity extends AppCompatActivity implements OnMapReadyCa
 
         if (addressList.size() > 0) {
             Address address = addressList.get(0);
-            Log.d(TAG, "geoLocate: found location: " + address.toString());
+            Log.d(TAG, "geoLocate: found location: " + address.getLocality());
             moveCamera(new LatLng(address.getLatitude(), address.getLongitude()), DEFAULT_ZOOM, address.getAddressLine(0));
-
         }
 
         hideKeyboard();
+    }
+
+    private void geoLocate(LatLng latLng) {
+        Log.d(TAG, "geoLocate: called by latlng");
+        Geocoder geocoder = new Geocoder(this);
+        List<Address> addressList = new ArrayList<>();
+
+        try {
+            addressList = geocoder.getFromLocation(latLng.latitude, latLng.longitude, 1);
+        } catch (IOException e) {
+            Log.e(TAG, "geoLocate: IOException: " + e);
+        }
+
+        if (addressList.size() > 0) {
+            Address address = addressList.get(0);
+            Log.d(TAG, "geoLocate: found location by latlng: " + address.toString());
+            moveCamera(latLng, DEFAULT_ZOOM, address.getAddressLine(0));
+        }
     }
 
     @Override
@@ -182,6 +200,14 @@ public class GoogleMapActivity extends AppCompatActivity implements OnMapReadyCa
     public void onMapReady(GoogleMap googleMap) {
         Log.d(TAG, "onMapReady: map is ready");
         mMap = googleMap;
+
+        mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
+            @Override
+            public void onMapClick(LatLng latLng) {
+                Log.d(TAG, "onMapClick: latlng: " + latLng.latitude + " , " + latLng.longitude);
+                geoLocate(latLng);
+            }
+        });
 
         if (!permissionDenied) {
             if (mLastLocationLatLng != null && mLastLocationTitle != null) {

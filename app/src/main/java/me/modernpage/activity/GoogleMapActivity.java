@@ -6,6 +6,7 @@ import androidx.core.app.ActivityCompat;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Address;
 import android.location.Geocoder;
@@ -45,8 +46,7 @@ import me.modernpage.PermissionUtils;
 
 public class GoogleMapActivity extends AppCompatActivity implements OnMapReadyCallback, ActivityCompat.OnRequestPermissionsResultCallback {
     private static final String TAG = "GoogleMapActivity";
-    private static String LAST_LOCATION_LATLNG_EXTRA = "last_selected_location_latlng";
-    private static String LAST_LOCATION_TITLE_EXTRA = "last_selected_location_title";
+    public static String LAST_ADDRESS_EXTRA = "last_address";
     private static final int LOCATION_PERMESSION_REQUEST_CODE = 1;
     private static final float DEFAULT_ZOOM = 15F;
     private boolean permissionDenied = false;
@@ -57,8 +57,7 @@ public class GoogleMapActivity extends AppCompatActivity implements OnMapReadyCa
     private PlacesAutocompleteTextView mSearchText;
     private ImageView mMyLocation;
 
-    private LatLng mLastLocationLatLng;
-    private String mLastLocationTitle;
+    private Address mLastAddress;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,9 +68,7 @@ public class GoogleMapActivity extends AppCompatActivity implements OnMapReadyCa
         mMyLocation = findViewById(R.id.my_location);
 
         if (savedInstanceState != null) {
-            mLastLocationLatLng = savedInstanceState.getParcelable(LAST_LOCATION_LATLNG_EXTRA);
-            mLastLocationTitle = savedInstanceState.getString(LAST_LOCATION_TITLE_EXTRA);
-            Log.d(TAG, "onCreate : savedInstanceState: latlng: " + mLastLocationLatLng.longitude + ", " + mLastLocationLatLng.latitude + ", title: " + mLastLocationTitle);
+            mLastAddress = savedInstanceState.getParcelable(LAST_ADDRESS_EXTRA);
         }
 
         if (PermissionUtils.hasPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)) {
@@ -101,7 +98,12 @@ public class GoogleMapActivity extends AppCompatActivity implements OnMapReadyCa
 
                     // execute search action
                     String searchQuery = textView.getText().toString();
-                    geoLocate(searchQuery);
+                    Address address = getAddressByName(searchQuery);
+                    if (address != null) {
+                        moveCamera(new LatLng(address.getLatitude(), address.getLongitude()), DEFAULT_ZOOM, address.getAddressLine(0));
+                        mLastAddress = address;
+                    }
+                    hideKeyboard();
                 }
                 return false;
             }
@@ -133,6 +135,13 @@ public class GoogleMapActivity extends AppCompatActivity implements OnMapReadyCa
         public void onSuccess(PlaceDetails placeDetails) {
             Log.d(TAG, "onSuccess: placeDetails : " + placeDetails.formatted_address + ", latlng: " + placeDetails.geometry.location.lat + ", " + placeDetails.geometry.location.lng);
             moveCamera(new LatLng(placeDetails.geometry.location.lat, placeDetails.geometry.location.lng), DEFAULT_ZOOM, placeDetails.formatted_address);
+            mLastAddress = new Address(Locale.getDefault());
+            mLastAddress.setLatitude(placeDetails.geometry.location.lat);
+            mLastAddress.setLongitude(placeDetails.geometry.location.lng);
+            mLastAddress.setAddressLine(0, placeDetails.formatted_address);
+            mLastAddress.setPhone(placeDetails.formatted_phone_number);
+            mLastAddress.setUrl(placeDetails.url);
+            mLastAddress.setLocality(placeDetails.name);
         }
 
         @Override
@@ -141,12 +150,13 @@ public class GoogleMapActivity extends AppCompatActivity implements OnMapReadyCa
         }
     };
 
-    private void geoLocate(String searchQuery) {
-        Log.d(TAG, "geoLocate: called");
+    private Address getAddressByName(String name) {
+        Log.d(TAG, "getAddressByName: called");
+
         Geocoder geocoder = new Geocoder(this, Locale.getDefault());
         List<Address> addressList = new ArrayList<>();
         try {
-            addressList = geocoder.getFromLocationName(searchQuery, 1);
+            addressList = geocoder.getFromLocationName(name, 1);
         } catch (IOException e) {
             Log.e(TAG, "geoLocate: IOException" + e);
         }
@@ -154,14 +164,13 @@ public class GoogleMapActivity extends AppCompatActivity implements OnMapReadyCa
         if (addressList.size() > 0) {
             Address address = addressList.get(0);
             Log.d(TAG, "geoLocate: found location: " + address.getLocality());
-            moveCamera(new LatLng(address.getLatitude(), address.getLongitude()), DEFAULT_ZOOM, address.getAddressLine(0));
+            return address;
         }
-
-        hideKeyboard();
+        return null;
     }
 
-    private void geoLocate(LatLng latLng) {
-        Log.d(TAG, "geoLocate: called by latlng");
+    private Address getAddressByLatLng(LatLng latLng) {
+        Log.d(TAG, "getAddressByLatLng: called");
         Geocoder geocoder = new Geocoder(this);
         List<Address> addressList = new ArrayList<>();
 
@@ -174,8 +183,9 @@ public class GoogleMapActivity extends AppCompatActivity implements OnMapReadyCa
         if (addressList.size() > 0) {
             Address address = addressList.get(0);
             Log.d(TAG, "geoLocate: found location by latlng: " + address.toString());
-            moveCamera(latLng, DEFAULT_ZOOM, address.getAddressLine(0));
+            return address;
         }
+        return null;
     }
 
     @Override
@@ -205,13 +215,17 @@ public class GoogleMapActivity extends AppCompatActivity implements OnMapReadyCa
             @Override
             public void onMapClick(LatLng latLng) {
                 Log.d(TAG, "onMapClick: latlng: " + latLng.latitude + " , " + latLng.longitude);
-                geoLocate(latLng);
+                Address address = getAddressByLatLng(latLng);
+                if (address != null) {
+                    moveCamera(new LatLng(address.getLatitude(), address.getLongitude()), DEFAULT_ZOOM, address.getAddressLine(0));
+                    mLastAddress = address;
+                }
             }
         });
 
         if (!permissionDenied) {
-            if (mLastLocationLatLng != null && mLastLocationTitle != null) {
-                moveCamera(mLastLocationLatLng, DEFAULT_ZOOM, mLastLocationTitle);
+            if (mLastAddress != null) {
+                moveCamera(new LatLng(mLastAddress.getLatitude(), mLastAddress.getLongitude()), DEFAULT_ZOOM, mLastAddress.getAddressLine(0));
             } else {
                 getDeviceLocation();
             }
@@ -227,7 +241,7 @@ public class GoogleMapActivity extends AppCompatActivity implements OnMapReadyCa
         mLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
         try {
             if (!permissionDenied) {
-                Task location = mLocationProviderClient.getLastLocation();
+                final Task location = mLocationProviderClient.getLastLocation();
                 location.addOnCompleteListener(new OnCompleteListener() {
                     @Override
                     public void onComplete(@NonNull Task task) {
@@ -236,6 +250,7 @@ public class GoogleMapActivity extends AppCompatActivity implements OnMapReadyCa
                             Location currentLocation = (Location) task.getResult();
                             // move camera to the current location;
                             mSearchText.setCurrentLocation(currentLocation);
+                            Log.d(TAG, "onComplete: getDeviceLocation: " + currentLocation.toString());
                             moveCamera(new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude()), DEFAULT_ZOOM, null);
                         } else {
                             Log.d(TAG, "onComplete: not found current location");
@@ -258,9 +273,6 @@ public class GoogleMapActivity extends AppCompatActivity implements OnMapReadyCa
                     .position(latLng)
                     .title(title);
             mMap.addMarker(markerOptions);
-
-            mLastLocationLatLng = latLng;
-            mLastLocationTitle = title;
         }
     }
 
@@ -293,11 +305,22 @@ public class GoogleMapActivity extends AppCompatActivity implements OnMapReadyCa
     @Override
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         Log.d(TAG, "onSaveInstanceState: called");
-        if (mLastLocationLatLng != null && mLastLocationTitle != null) {
-            Log.d(TAG, "onSaveInstanceState: latlng: " + mLastLocationLatLng.longitude + ", " + mLastLocationLatLng.latitude + " , " + mLastLocationTitle);
-            outState.putParcelable(LAST_LOCATION_LATLNG_EXTRA, mLastLocationLatLng);
-            outState.putString(LAST_LOCATION_TITLE_EXTRA, mLastLocationTitle);
+        if (mLastAddress != null) {
+            Log.d(TAG, "onSaveInstanceState: lastAddress: " + mLastAddress.toString());
+            outState.putParcelable(LAST_ADDRESS_EXTRA, mLastAddress);
         }
         super.onSaveInstanceState(outState);
+    }
+
+    public void submitLocation(View view) {
+        Intent data = new Intent();
+        if (mLastAddress != null) {
+            data.putExtra(LAST_ADDRESS_EXTRA, mLastAddress);
+        } else {
+            Location location = mSearchText.getCurrentLocation();
+            data.putExtra(LAST_ADDRESS_EXTRA, getAddressByLatLng(new LatLng(location.getAltitude(), location.getLongitude())));
+        }
+        setResult(RESULT_OK, data);
+        finish();
     }
 }

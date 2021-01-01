@@ -38,4 +38,5 @@
     <string name="empty_private_group">No any available private groups</string>
     <string name="post_content_hint">What\'s on your mind?</string>
     <string name="enter_address_city_or_zip_code">Enter Address, City or Zip Code</string>
+    <string name="submit">Submit</string>
 </resources>

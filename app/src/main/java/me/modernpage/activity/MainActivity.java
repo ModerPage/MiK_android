@@ -67,29 +67,9 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
         mMapFragment = new MapFragment();
         mGroupFragment = new GroupFragment();
 
-        if(savedInstanceState == null) {
-            mActiveFragment = mHomeFragment;
-            mFragmentStatus = FragmentStatus.HOME_FRAGMENT;
-        } else {
-            mFragmentStatus = (FragmentStatus) savedInstanceState.getSerializable(ACTIVE_FRAGMENT_EXTRA);
-            if(mFragmentStatus != null) {
-                if(mFragmentStatus == FragmentStatus.HOME_FRAGMENT)
-                    mActiveFragment = mHomeFragment;
-                else if(mFragmentStatus == FragmentStatus.GROUP_FRAGMENT)
-                    mActiveFragment = mGroupFragment;
-                else if(mFragmentStatus == FragmentStatus.POST_FRAGMENT)
-                    mActiveFragment = mPostFragment;
-                else if(mFragmentStatus == FragmentStatus.MAP_FRAGMENT)
-                    mActiveFragment = mMapFragment;
-            }
-        }
 
-        mFragmentManager.beginTransaction().add(R.id.main_frag_container,mGroupFragment,"4").hide(mGroupFragment).commit();
-        mFragmentManager.beginTransaction().add(R.id.main_frag_container,mPostFragment,"3").hide(mPostFragment).commit();
-        mFragmentManager.beginTransaction().add(R.id.main_frag_container,mMapFragment,"2").hide(mMapFragment).commit();
-        mFragmentManager.beginTransaction().add(R.id.main_frag_container,mHomeFragment,"1").hide(mHomeFragment).commit();
-        mFragmentManager.beginTransaction().show(mActiveFragment).commit();
-
+        mActiveFragment = mHomeFragment;
+        mFragmentStatus = FragmentStatus.HOME_FRAGMENT;
 
         ((BottomNavigationView)findViewById(R.id.main_bottom_nav)).setOnNavigationItemSelectedListener(this);
 
@@ -149,7 +129,32 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
     }
 
     @Override
+    protected void onRestoreInstanceState(@NonNull Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+
+        mFragmentStatus = (FragmentStatus) savedInstanceState.getSerializable(ACTIVE_FRAGMENT_EXTRA);
+        if (mFragmentStatus != null) {
+            if (mFragmentStatus == FragmentStatus.HOME_FRAGMENT)
+                mActiveFragment = mHomeFragment;
+            else if (mFragmentStatus == FragmentStatus.GROUP_FRAGMENT)
+                mActiveFragment = mGroupFragment;
+            else if (mFragmentStatus == FragmentStatus.POST_FRAGMENT)
+                mActiveFragment = mPostFragment;
+            else if (mFragmentStatus == FragmentStatus.MAP_FRAGMENT)
+                mActiveFragment = mMapFragment;
+        }
+    }
+
+    @Override
     protected void onResume() {
+        Log.d(TAG, "onResume: called");
+
+        mFragmentManager.beginTransaction().add(R.id.main_frag_container, mGroupFragment, "4").hide(mGroupFragment).commit();
+        mFragmentManager.beginTransaction().add(R.id.main_frag_container, mPostFragment, "3").hide(mPostFragment).commit();
+        mFragmentManager.beginTransaction().add(R.id.main_frag_container, mMapFragment, "2").hide(mMapFragment).commit();
+        mFragmentManager.beginTransaction().add(R.id.main_frag_container, mHomeFragment, "1").hide(mHomeFragment).commit();
+        mFragmentManager.beginTransaction().show(mActiveFragment).commit();
+
         ProcessUser processUser = new ProcessUser(this);
         processUser.execute(mCurrentUsername);
 
@@ -171,7 +176,14 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
     }
 
     @Override
+    protected void onStop() {
+        Log.d(TAG, "onStop: called");
+        super.onStop();
+    }
+
+    @Override
     protected void onSaveInstanceState(@NonNull Bundle outState) {
+        Log.d(TAG, "onSaveInstanceState: called");
 
         outState.putSerializable(ACTIVE_FRAGMENT_EXTRA, mFragmentStatus);
         for(Fragment f: mFragmentManager.getFragments()) {
@@ -179,7 +191,6 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
         }
         super.onSaveInstanceState(outState);
     }
-
 
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {

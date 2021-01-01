@@ -199,6 +199,11 @@ public class PostFragment extends Fragment implements GetAllGroup.OnGetAllGroup,
             mIsFileExist = true;
             Bitmap selectedBitmap = null;
             switch (requestCode) {
+                case ADD_LOCATION_REQUEST:
+                    if (resultCode == RESULT_OK && data != null) {
+                        // getting address from return result
+                    }
+                    break;
                 case TAKEPHOTO_REQUEST:
                     if(resultCode == RESULT_OK && data != null) {
                         selectedBitmap  = (Bitmap) data.getExtras().get("data");

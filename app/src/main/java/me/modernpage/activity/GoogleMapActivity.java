@@ -232,7 +232,6 @@ public class GoogleMapActivity extends AppCompatActivity implements OnMapReadyCa
             // add small blue dot on current location of device , centers it on the phone screen
             mMap.setMyLocationEnabled(true);
             mMap.getUiSettings().setMyLocationButtonEnabled(false);
-            mMap.getUiSettings().setZoomControlsEnabled(true);
         }
     }
 
@@ -315,10 +314,12 @@ public class GoogleMapActivity extends AppCompatActivity implements OnMapReadyCa
     public void submitLocation(View view) {
         Intent data = new Intent();
         if (mLastAddress != null) {
+            Log.d(TAG, "submitLocation: lastAddress: " + mLastAddress);
             data.putExtra(LAST_ADDRESS_EXTRA, mLastAddress);
         } else {
             Location location = mSearchText.getCurrentLocation();
-            data.putExtra(LAST_ADDRESS_EXTRA, getAddressByLatLng(new LatLng(location.getAltitude(), location.getLongitude())));
+            Address address = getAddressByLatLng(new LatLng(location.getLatitude(), location.getLongitude()));
+            data.putExtra(LAST_ADDRESS_EXTRA, address);
         }
         setResult(RESULT_OK, data);
         finish();

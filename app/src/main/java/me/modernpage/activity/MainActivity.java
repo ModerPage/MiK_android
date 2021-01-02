@@ -1,6 +1,7 @@
 package me.modernpage.activity;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.view.GravityCompat;
@@ -131,7 +132,7 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
     @Override
     protected void onRestoreInstanceState(@NonNull Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
-
+        Log.d(TAG, "onRestoreInstanceState: called");
         mFragmentStatus = (FragmentStatus) savedInstanceState.getSerializable(ACTIVE_FRAGMENT_EXTRA);
         if (mFragmentStatus != null) {
             if (mFragmentStatus == FragmentStatus.HOME_FRAGMENT)
@@ -173,12 +174,6 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
         posts_count.setTypeface(null, Typeface.BOLD);
         posts_count.setText("0");
         super.onResume();
-    }
-
-    @Override
-    protected void onStop() {
-        Log.d(TAG, "onStop: called");
-        super.onStop();
     }
 
     @Override
@@ -245,8 +240,8 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
     @Override
     public void onProcessUserFinished(UserEntity user) {
         mCurrentUser = user;
-
-        CircleImageView imageView = findViewById(R.id.nav_header_profile_image);
+        View headerView = mNavigationView.getHeaderView(0);
+        CircleImageView imageView = headerView.findViewById(R.id.nav_header_profile_image);
 
         if (user.getImageUri() != null) {
             Picasso.get().load(user.getImageUri())
@@ -256,15 +251,23 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
                     .into(imageView);
         }
 
-        TextView fullname = findViewById(R.id.nav_header_fullname);
+        TextView fullname = headerView.findViewById(R.id.nav_header_fullname);
         fullname.setText(user.getFullname());
 
 
-        TextView username = findViewById(R.id.nav_header_username);
+        TextView username = headerView.findViewById(R.id.nav_header_username);
         username.setText(user.getUsername());
 
-        TextView email = findViewById(R.id.nav_header_email);
+        TextView email = headerView.findViewById(R.id.nav_header_email);
         email.setText(user.getEmail());
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        Log.d(TAG, "onActivityResult: called");
+        Log.d(TAG, "onActivityResult: requestCode: " + requestCode);
+        mActiveFragment.onActivityResult(requestCode, resultCode, data);
+        super.onActivityResult(requestCode, resultCode, data);
     }
 
     public void clickLogout(View view) {

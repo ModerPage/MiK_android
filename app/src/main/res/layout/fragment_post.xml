@@ -112,10 +112,22 @@
         android:fontFamily="@font/roboto_medium"
         android:text="@string/post"
         android:textColor="@android:color/white"
-        app:layout_constraintBottom_toBottomOf="@+id/post_add_location"
+        app:layout_constraintBottom_toBottomOf="@+id/post_location"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintTop_toTopOf="@+id/post_location" />
+
+    <TextView
+        android:id="@+id/post_location"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="16dp"
+        android:ellipsize="end"
+        android:fontFamily="@font/roboto"
+        app:layout_constraintBottom_toBottomOf="@+id/post_add_location"
+        app:layout_constraintEnd_toStartOf="@+id/post_post"
         app:layout_constraintStart_toEndOf="@+id/post_add_location"
-        app:layout_constraintTop_toTopOf="@+id/post_add_location" />
+        app:layout_constraintTop_toTopOf="@+id/post_add_location"
+        tools:text="location" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

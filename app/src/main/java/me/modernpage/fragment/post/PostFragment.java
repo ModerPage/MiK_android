@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.location.Address;
 import android.net.Uri;
 import android.os.Bundle;
 
@@ -60,7 +61,15 @@ public class PostFragment extends Fragment implements GetAllGroup.OnGetAllGroup,
     private Spinner mSpinner;
     private ImageView mAvatar;
     private TextView mFullname;
+    private TextView mPostLocation;
+
     private LinearLayout mPostFileContainer;
+    private CustomImageLayout mImageLayout;
+    private CustomVideoLayout mVideoLayout;
+
+    private Bitmap mLaodedBitmap;
+    private String mLoadedVideoPath;
+    private Address mLoadedAddress;
 
 //     this boolean is to ensure that user can upload only one file
     private boolean mIsFileExist = false;
@@ -80,6 +89,7 @@ public class PostFragment extends Fragment implements GetAllGroup.OnGetAllGroup,
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         Log.d(TAG, "onViewCreated: starts");
+
         GetAllGroup getAllGroup = new GetAllGroup(getContext(), this);
         getAllGroup.execute();
 
@@ -89,6 +99,42 @@ public class PostFragment extends Fragment implements GetAllGroup.OnGetAllGroup,
         mAvatar = view.findViewById(R.id.post_avatar);
         mFullname = view.findViewById(R.id.post_fullname);
         mPostFileContainer = view.findViewById(R.id.file_container);
+        mPostLocation = view.findViewById(R.id.post_location);
+
+        mImageLayout = new CustomImageLayout(getContext());
+        mVideoLayout = new CustomVideoLayout(getContext());
+
+        mImageLayout.getCloseButton().setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mPostFileContainer.removeView(mImageLayout);
+                mIsFileExist = false;
+                mLaodedBitmap = null;
+            }
+        });
+
+        mVideoLayout.getCloseButton().setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mPostFileContainer.removeView(mVideoLayout);
+                mIsFileExist = false;
+                mLoadedVideoPath = null;
+            }
+        });
+
+        if (mIsFileExist) {
+            if (mLaodedBitmap != null) {
+                mImageLayout.getImageView().setImageBitmap(mLaodedBitmap);
+                mPostFileContainer.addView(mImageLayout);
+            } else if (mLoadedVideoPath != null) {
+                mVideoLayout.getVideoView().setVideoPath(mLoadedVideoPath);
+                mPostFileContainer.addView(mVideoLayout);
+            }
+        }
+
+        if (mLoadedAddress != null) {
+            mPostLocation.setText(mLoadedAddress.getAddressLine(0));
+        }
 
         ProcessUser processUser = new ProcessUser(this);
         processUser.execute(username);
@@ -136,8 +182,8 @@ public class PostFragment extends Fragment implements GetAllGroup.OnGetAllGroup,
                         @Override
                         public void onClick(DialogInterface dialogInterface, int i) {
                             if (options[i].equals("Take Video")) {
-                                Intent takePicture = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
-                                startActivityForResult(takePicture, TAKEVIDEO_REQUEST);
+                                Intent takeVideo = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
+                                startActivityForResult(takeVideo, TAKEVIDEO_REQUEST);
                             } else if (options[i].equals("Choose from Gallery")) {
                                 Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Video.Media.EXTERNAL_CONTENT_URI);
                                 startActivityForResult(intent, GALLERY_VIDEO_REQUEST);
@@ -168,6 +214,7 @@ public class PostFragment extends Fragment implements GetAllGroup.OnGetAllGroup,
         Log.d(TAG, "onViewCreated: ends");
     }
 
+
     private void initGoogleMap() {
         Intent intent = new Intent(getActivity(), GoogleMapActivity.class);
         startActivityForResult(intent, ADD_LOCATION_REQUEST);
@@ -175,43 +222,30 @@ public class PostFragment extends Fragment implements GetAllGroup.OnGetAllGroup,
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        Log.d(TAG, "onActivityResult: called");
+
         if(resultCode != RESULT_CANCELED) {
-
-            final CustomImageLayout imageView = new CustomImageLayout(getContext());
-            final CustomVideoLayout videoView = new CustomVideoLayout(getContext());
-
-            imageView.getCloseButton().setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    mPostFileContainer.removeView(imageView);
-                    mIsFileExist = false;
-                }
-            });
-
-            videoView.getCloseButton().setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    mPostFileContainer.removeView(videoView);
-                    mIsFileExist = false;
-                }
-            });
+            final int unmaskedRequestCode = requestCode & 0x0000ffff;
+            Log.d(TAG, "onActivityResult: unmaskedRequestCode: " + unmaskedRequestCode);
 
             mIsFileExist = true;
-            Bitmap selectedBitmap = null;
-            switch (requestCode) {
+            switch (unmaskedRequestCode) {
                 case ADD_LOCATION_REQUEST:
                     if (resultCode == RESULT_OK && data != null) {
-                        // getting address from return result
+                        mLoadedAddress = data.getParcelableExtra(GoogleMapActivity.LAST_ADDRESS_EXTRA);
+                        Log.d(TAG, "onActivityResult: ADD_LOCATION_REQUEST: " + mLoadedAddress);
                     }
                     break;
                 case TAKEPHOTO_REQUEST:
                     if(resultCode == RESULT_OK && data != null) {
-                        selectedBitmap  = (Bitmap) data.getExtras().get("data");
+                        mLaodedBitmap = (Bitmap) data.getExtras().get("data");
+                        Log.d(TAG, "onActivityResult: loadedBitmap: " + mLaodedBitmap);
                     }
                     break;
                 case GALLERY_IMAGE_REQUEST:
                     if (resultCode == RESULT_OK && data != null) {
-                        Uri selectedImage =  data.getData();
+                        Log.d(TAG, "onActivityResult: unmaskedRequestCode: " + unmaskedRequestCode);
+                        Uri selectedImage = data.getData();
                         String[] filePathColumn = {MediaStore.Images.Media.DATA};
                         if (selectedImage != null) {
                             Cursor cursor = getContext().getContentResolver().query(selectedImage,
@@ -223,7 +257,7 @@ public class PostFragment extends Fragment implements GetAllGroup.OnGetAllGroup,
                                 String picturePath = cursor.getString(columnIndex);
                                 Bitmap bitmap = BitmapFactory.decodeFile(picturePath);
                                 Log.d(TAG, "onActivityResult: bitmap : " + bitmap);
-                                selectedBitmap = Bitmap.createScaledBitmap(bitmap ,
+                                mLaodedBitmap = Bitmap.createScaledBitmap(bitmap,
                                         (int) (bitmap.getWidth() * 0.1),
                                         (int) (bitmap.getHeight() * 0.1),
                                         true);
@@ -232,36 +266,31 @@ public class PostFragment extends Fragment implements GetAllGroup.OnGetAllGroup,
                         }
                     }
                     break;
-
                 case TAKEVIDEO_REQUEST:
                     if(resultCode == RESULT_OK && data != null) {
+                        Log.d(TAG, "onActivityResult: unmaskedRequestCode: " + unmaskedRequestCode);
                         Uri uri = data.getData();
-                        videoView.getVideoView().setVideoURI(uri);
-                        mPostFileContainer.addView(videoView);
+                        Log.d(TAG, "onActivityResult: uri" + uri + ", uri path: " + uri.getPath());
+                        mLoadedVideoPath = uri.getPath();
                     }
                     break;
                 case GALLERY_VIDEO_REQUEST:
                     if (resultCode == RESULT_OK && data != null) {
+                        Log.d(TAG, "onActivityResult: unmaskedRequestCode: " + unmaskedRequestCode);
                         Uri selectedVideo = data.getData();
                         String[] filePathColumn = {MediaStore.Video.Media.DATA};
-                        if(selectedVideo != null) {
+                        if (selectedVideo != null) {
                             Cursor cursor = getContext().getContentResolver().query(selectedVideo,
                                     filePathColumn, null, null, null);
-                            if(cursor != null) {
+                            if (cursor != null) {
                                 cursor.moveToFirst();
                                 int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
-                                String videoPath = cursor.getString(columnIndex);
-                                videoView.getVideoView().setVideoPath(videoPath);
-                                mPostFileContainer.addView(videoView);
+                                mLoadedVideoPath = cursor.getString(columnIndex);
                                 cursor.close();
                             }
                         }
                     }
                     break;
-            }
-            if(selectedBitmap != null) {
-                imageView.getImageView().setImageBitmap(selectedBitmap);
-                mPostFileContainer.addView(imageView);
             }
         }
         super.onActivityResult(requestCode,resultCode, data);

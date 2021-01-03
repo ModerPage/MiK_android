@@ -8,7 +8,9 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -418,6 +420,7 @@ public class PostFragment extends Fragment implements GetAllGroup.OnGetAllGroup,
     @Override
     public void onResume() {
         Log.d(TAG, "onResume: called");
+
         if (mIsFileExist) {
             if (mLoadedImagePath != null) {
                 Bitmap bitmap = BitmapFactory.decodeFile(mLoadedImagePath);
@@ -433,10 +436,21 @@ public class PostFragment extends Fragment implements GetAllGroup.OnGetAllGroup,
             }
         }
 
-        if (mLoadedAddress != null) {
+        if (mLoadedAddress != null)
             mPostLocation.setText(mLoadedAddress.getAddressLine(0));
-        }
+
+        if (getActivity() != null)
+            getActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+
         super.onResume();
+    }
+
+    @Override
+    public void onPause() {
+        if (getActivity() != null)
+            getActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR);
+
+        super.onPause();
     }
 
     @Override

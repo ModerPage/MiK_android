@@ -62,15 +62,16 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
 
         mCurrentUsername = getIntent().getStringExtra(USERNAME_EXTRA);
         mFragmentManager = getSupportFragmentManager();
+        if (mFragmentManager.getFragments().isEmpty()) {
+            mHomeFragment = new HomeFragment();
+            mPostFragment = PostFragment.newInstance(mCurrentUsername);
+            mMapFragment = new MapFragment();
+            mGroupFragment = new GroupFragment();
+            mActiveFragment = mHomeFragment;
+            mFragmentStatus = FragmentStatus.HOME_FRAGMENT;
+        }
 
-        mHomeFragment = new HomeFragment();
-        mPostFragment = PostFragment.newInstance(mCurrentUsername);
-        mMapFragment = new MapFragment();
-        mGroupFragment = new GroupFragment();
 
-
-        mActiveFragment = mHomeFragment;
-        mFragmentStatus = FragmentStatus.HOME_FRAGMENT;
 
         ((BottomNavigationView)findViewById(R.id.main_bottom_nav)).setOnNavigationItemSelectedListener(this);
 
@@ -136,13 +137,13 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
         mFragmentStatus = (FragmentStatus) savedInstanceState.getSerializable(ACTIVE_FRAGMENT_EXTRA);
         if (mFragmentStatus != null) {
             if (mFragmentStatus == FragmentStatus.HOME_FRAGMENT)
-                mActiveFragment = mHomeFragment;
+                mActiveFragment = mFragmentManager.findFragmentByTag("1");
             else if (mFragmentStatus == FragmentStatus.GROUP_FRAGMENT)
-                mActiveFragment = mGroupFragment;
+                mActiveFragment = mFragmentManager.findFragmentByTag("4");
             else if (mFragmentStatus == FragmentStatus.POST_FRAGMENT)
-                mActiveFragment = mPostFragment;
+                mActiveFragment = mFragmentManager.findFragmentByTag("3");
             else if (mFragmentStatus == FragmentStatus.MAP_FRAGMENT)
-                mActiveFragment = mMapFragment;
+                mActiveFragment = mFragmentManager.findFragmentByTag("2");
         }
     }
 
@@ -150,10 +151,13 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
     protected void onResume() {
         Log.d(TAG, "onResume: called");
 
-        mFragmentManager.beginTransaction().add(R.id.main_frag_container, mGroupFragment, "4").hide(mGroupFragment).commit();
-        mFragmentManager.beginTransaction().add(R.id.main_frag_container, mPostFragment, "3").hide(mPostFragment).commit();
-        mFragmentManager.beginTransaction().add(R.id.main_frag_container, mMapFragment, "2").hide(mMapFragment).commit();
-        mFragmentManager.beginTransaction().add(R.id.main_frag_container, mHomeFragment, "1").hide(mHomeFragment).commit();
+        Log.d(TAG, "onResume: mFragmentManager size:" + mFragmentManager.getFragments().size());
+        if (mFragmentManager.getFragments().size() == 0) {
+            mFragmentManager.beginTransaction().add(R.id.main_frag_container, mGroupFragment, "4").hide(mGroupFragment).commit();
+            mFragmentManager.beginTransaction().add(R.id.main_frag_container, mPostFragment, "3").hide(mPostFragment).commit();
+            mFragmentManager.beginTransaction().add(R.id.main_frag_container, mMapFragment, "2").hide(mMapFragment).commit();
+            mFragmentManager.beginTransaction().add(R.id.main_frag_container, mHomeFragment, "1").hide(mHomeFragment).commit();
+        }
         mFragmentManager.beginTransaction().show(mActiveFragment).commit();
 
         ProcessUser processUser = new ProcessUser(this);
@@ -182,7 +186,8 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
 
         outState.putSerializable(ACTIVE_FRAGMENT_EXTRA, mFragmentStatus);
         for(Fragment f: mFragmentManager.getFragments()) {
-            mFragmentManager.beginTransaction().remove(f).commit();
+            //mFragmentManager.beginTransaction().remove(f).commit();
+            mFragmentManager.beginTransaction().hide(f).commit();
         }
         super.onSaveInstanceState(outState);
     }

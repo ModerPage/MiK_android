@@ -1,12 +1,18 @@
 package me.modernpage.activity;
 
 
+import android.app.Activity;
+import android.util.Log;
+import android.view.View;
+import android.view.inputmethod.InputMethodManager;
+
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class BaseActivity extends AppCompatActivity {
+    private static final String TAG = "BaseActivity";
     private static final String IP_ADDRESS = "http://192.168.1.108";
     public static final String BASE_URL = IP_ADDRESS + ":8080/MakeItKnown";
     public static final String UPDATEUSER_URL = BASE_URL + "/user/updateUser";
@@ -35,5 +41,17 @@ public class BaseActivity extends AppCompatActivity {
         Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(field);
         return !matcher.matches();
+    }
+
+    public void hideKeyboard() {
+        InputMethodManager imm = (InputMethodManager) getSystemService(Activity.INPUT_METHOD_SERVICE);
+        //Find the currently focused view, so we can grab the correct window token from it.
+        View view = getCurrentFocus();
+        Log.d(TAG, "hideKeyboard: view: " + view);
+        //If no view currently has focus, create a new one, just so we can grab a window token from it
+        if (view == null) {
+            view = new View(this);
+        }
+        imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
     }
 }

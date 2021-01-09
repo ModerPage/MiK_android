@@ -6,18 +6,23 @@ import androidx.core.app.ActivityCompat;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.IntentService;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.ResultReceiver;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
+import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -42,7 +47,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+import me.modernpage.Constants;
 import me.modernpage.PermissionUtils;
+import me.modernpage.task.GeocodeAddressService;
 
 public class GoogleMapActivity extends BaseActivity implements OnMapReadyCallback, ActivityCompat.OnRequestPermissionsResultCallback {
     private static final String TAG = "GoogleMapActivity";
@@ -56,8 +63,10 @@ public class GoogleMapActivity extends BaseActivity implements OnMapReadyCallbac
     private FusedLocationProviderClient mLocationProviderClient;
     private PlacesAutocompleteTextView mSearchText;
     private ImageView mMyLocation;
+    private ProgressBar mProgressBar;
 
     private Address mLastAddress;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,6 +75,7 @@ public class GoogleMapActivity extends BaseActivity implements OnMapReadyCallbac
         setContentView(R.layout.activity_google_map);
         mSearchText = findViewById(R.id.input_search);
         mMyLocation = findViewById(R.id.my_location);
+        mProgressBar = findViewById(R.id.map_progress_bar);
 
         if (savedInstanceState != null) {
             mLastAddress = savedInstanceState.getParcelable(LAST_ADDRESS_EXTRA);
@@ -98,12 +108,45 @@ public class GoogleMapActivity extends BaseActivity implements OnMapReadyCallbac
 
                     // execute search action
                     String searchQuery = textView.getText().toString();
-                    Address address = getAddressByName(searchQuery);
-                    if (address != null) {
-                        moveCamera(new LatLng(address.getLatitude(), address.getLongitude()), DEFAULT_ZOOM, address.getAddressLine(0));
-                        mLastAddress = address;
-                    }
+                    Intent findLocation = new Intent(GoogleMapActivity.this, GeocodeAddressService.class);
+                    findLocation.putExtra(Constants.Gecode.EXTRA_RESULT_RECEIVER, new ResultReceiver(null) {
+                        @Override
+                        protected void onReceiveResult(int resultCode, Bundle resultData) {
+                            if (resultCode == Constants.Gecode.SUCCESS_RESULT) {
+                                final Address address = resultData.getParcelable(Constants.Gecode.RESULT_ADDRESS);
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        mProgressBar.setVisibility(View.GONE);
+                                        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+
+                                        moveCamera(new LatLng(address.getLatitude(), address.getLongitude()), DEFAULT_ZOOM, address.getAddressLine(0));
+                                        mLastAddress = address;
+                                    }
+                                });
+                            } else {
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        mProgressBar.setVisibility(View.GONE);
+                                        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+
+                                        Toast.makeText(GoogleMapActivity.this, "Address Not Found", Toast.LENGTH_LONG).show();
+                                    }
+                                });
+
+                            }
+                        }
+                    });
+                    findLocation.putExtra(Constants.Gecode.EXTRA_FETCH_TYPE, Constants.Gecode.USE_ADDRESS_NAME);
+                    findLocation.putExtra(Constants.Gecode.EXTRA_LOCATION_NAME_DATA, searchQuery);
+
                     hideKeyboard();
+                    mProgressBar.setVisibility(View.VISIBLE);
+                    getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
+                            WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+
+                    startService(findLocation);
                 }
                 return false;
             }
@@ -150,44 +193,6 @@ public class GoogleMapActivity extends BaseActivity implements OnMapReadyCallbac
         }
     };
 
-    private Address getAddressByName(String name) {
-        Log.d(TAG, "getAddressByName: called");
-
-        Geocoder geocoder = new Geocoder(this, Locale.getDefault());
-        List<Address> addressList = new ArrayList<>();
-        try {
-            addressList = geocoder.getFromLocationName(name, 1);
-        } catch (IOException e) {
-            Log.e(TAG, "geoLocate: IOException" + e);
-        }
-
-        if (addressList.size() > 0) {
-            Address address = addressList.get(0);
-            Log.d(TAG, "geoLocate: found location: " + address.getLocality());
-            return address;
-        }
-        return null;
-    }
-
-    private Address getAddressByLatLng(LatLng latLng) {
-        Log.d(TAG, "getAddressByLatLng: called");
-        Geocoder geocoder = new Geocoder(this);
-        List<Address> addressList = new ArrayList<>();
-
-        try {
-            addressList = geocoder.getFromLocation(latLng.latitude, latLng.longitude, 1);
-        } catch (IOException e) {
-            Log.e(TAG, "geoLocate: IOException: " + e);
-        }
-
-        if (addressList.size() > 0) {
-            Address address = addressList.get(0);
-            Log.d(TAG, "geoLocate: found location by latlng: " + address.toString());
-            return address;
-        }
-        return null;
-    }
-
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         if (requestCode != LOCATION_PERMESSION_REQUEST_CODE) {
@@ -215,11 +220,44 @@ public class GoogleMapActivity extends BaseActivity implements OnMapReadyCallbac
             @Override
             public void onMapClick(LatLng latLng) {
                 Log.d(TAG, "onMapClick: latlng: " + latLng.latitude + " , " + latLng.longitude);
-                Address address = getAddressByLatLng(latLng);
-                if (address != null) {
-                    moveCamera(new LatLng(address.getLatitude(), address.getLongitude()), DEFAULT_ZOOM, address.getAddressLine(0));
-                    mLastAddress = address;
-                }
+
+                Intent findLocation = new Intent(GoogleMapActivity.this, GeocodeAddressService.class);
+                findLocation.putExtra(Constants.Gecode.EXTRA_RESULT_RECEIVER, new ResultReceiver(null) {
+                    @Override
+                    protected void onReceiveResult(int resultCode, Bundle resultData) {
+                        if (resultCode == Constants.Gecode.SUCCESS_RESULT) {
+                            final Address address = resultData.getParcelable(Constants.Gecode.RESULT_ADDRESS);
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    mProgressBar.setVisibility(View.GONE);
+                                    getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+
+                                    moveCamera(new LatLng(address.getLatitude(), address.getLongitude()), DEFAULT_ZOOM, address.getAddressLine(0));
+                                    mLastAddress = address;
+                                }
+                            });
+                        } else {
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    mProgressBar.setVisibility(View.GONE);
+                                    getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+
+                                    Toast.makeText(GoogleMapActivity.this, "Address Not Found", Toast.LENGTH_LONG).show();
+                                }
+                            });
+
+                        }
+                    }
+                });
+                findLocation.putExtra(Constants.Gecode.EXTRA_FETCH_TYPE, Constants.Gecode.USE_ADDRESS_LOCATION);
+                findLocation.putExtra(Constants.Gecode.EXTRA_LOCATION_LATLNG, latLng);
+
+                mProgressBar.setVisibility(View.VISIBLE);
+                getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
+                        WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+                startService(findLocation);
             }
         });
 
@@ -301,16 +339,52 @@ public class GoogleMapActivity extends BaseActivity implements OnMapReadyCallbac
     }
 
     public void submitLocation(View view) {
-        Intent data = new Intent();
-        if (mLastAddress != null) {
-            Log.d(TAG, "submitLocation: lastAddress: " + mLastAddress);
-            data.putExtra(LAST_ADDRESS_EXTRA, mLastAddress);
-        } else {
+        final Intent data = new Intent();
+        if (mLastAddress == null) {
             Location location = mSearchText.getCurrentLocation();
-            Address address = getAddressByLatLng(new LatLng(location.getLatitude(), location.getLongitude()));
-            data.putExtra(LAST_ADDRESS_EXTRA, address);
+            Intent findLocation = new Intent(GoogleMapActivity.this, GeocodeAddressService.class);
+            findLocation.putExtra(Constants.Gecode.EXTRA_RESULT_RECEIVER, new ResultReceiver(null) {
+                @Override
+                protected void onReceiveResult(int resultCode, Bundle resultData) {
+                    if (resultCode == Constants.Gecode.SUCCESS_RESULT) {
+                        final Address address = resultData.getParcelable(Constants.Gecode.RESULT_ADDRESS);
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                mProgressBar.setVisibility(View.GONE);
+                                getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+
+                                data.putExtra(LAST_ADDRESS_EXTRA, address);
+                                setResult(RESULT_OK, data);
+                                finish();
+                            }
+                        });
+                    } else {
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                mProgressBar.setVisibility(View.GONE);
+                                getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+
+                                Toast.makeText(GoogleMapActivity.this, "Address Not Found", Toast.LENGTH_LONG).show();
+                            }
+                        });
+
+                    }
+                }
+            });
+            findLocation.putExtra(Constants.Gecode.EXTRA_FETCH_TYPE, Constants.Gecode.USE_ADDRESS_LOCATION);
+            findLocation.putExtra(Constants.Gecode.EXTRA_LOCATION_LATLNG, new LatLng(location.getLatitude(), location.getLongitude()));
+
+            getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
+                    WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+            mProgressBar.setVisibility(View.VISIBLE);
+            startService(findLocation);
+        } else {
+            data.putExtra(LAST_ADDRESS_EXTRA, mLastAddress);
+            setResult(RESULT_OK, data);
+            finish();
         }
-        setResult(RESULT_OK, data);
-        finish();
+        Log.d(TAG, "submitLocation: lastAddress: " + mLastAddress);
     }
 }

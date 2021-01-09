@@ -14,6 +14,7 @@ import android.content.res.Configuration;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
 import android.location.Address;
 import android.net.Uri;
 import android.os.Bundle;
@@ -31,6 +32,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
@@ -54,8 +57,11 @@ import me.modernpage.activity.GoogleMapActivity;
 import me.modernpage.activity.MainActivity;
 import me.modernpage.activity.R;
 import me.modernpage.entity.Group;
+import me.modernpage.entity.Location;
+import me.modernpage.entity.Post;
 import me.modernpage.entity.UserEntity;
 import me.modernpage.task.GetAllGroup;
+import me.modernpage.task.ProcessPost;
 import me.modernpage.task.ProcessUser;
 
 import static android.app.Activity.RESULT_CANCELED;
@@ -98,6 +104,8 @@ public class PostFragment extends Fragment implements GetAllGroup.OnGetAllGroup,
     private Address mLoadedAddress;
     private int mGroupIndex = -1;
     private boolean mSpinnerInitial = true;
+    private UserEntity mCurrentUser;
+    private List<Group> mGroups;
 
 //     this boolean is to ensure that user can upload only one file
     private boolean mIsFileExist = false;
@@ -149,6 +157,43 @@ public class PostFragment extends Fragment implements GetAllGroup.OnGetAllGroup,
         mFullname = view.findViewById(R.id.post_fullname);
         mPostFileContainer = view.findViewById(R.id.file_container);
         mPostLocation = view.findViewById(R.id.post_location);
+        Button postButton = view.findViewById(R.id.post_post);
+
+        postButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                EditText editText = getView().findViewById(R.id.post_content);
+                String post_content = editText.getText().toString().trim();
+                String post_file_path = null;
+                Location post_location = null;
+                Group post_group = mGroups.get(mGroupIndex < 0 ? 0 : mGroupIndex);
+
+                if (post_content.length() == 0) {
+                    editText.setError("Post text can't be empty");
+                    return;
+                }
+
+                if (!mIsFileExist) {
+                    Toast.makeText(getContext(), "Upload an image or a video to make a post", Toast.LENGTH_LONG).show();
+                    return;
+                } else {
+                    if (mLoadedImagePath != null) {
+                        post_file_path = mLoadedImagePath;
+                    } else if (mLoadedVideoPath != null) {
+                        post_file_path = mLoadedVideoPath;
+                    }
+                }
+
+                if (mLoadedAddress != null)
+                    post_location = new Location(mLoadedAddress.getLongitude(),
+                            mLoadedAddress.getLatitude(), mLoadedAddress.getAddressLine(0),
+                            mLoadedAddress.getLocality(), mLoadedAddress.getCountryName());
+
+                Post post = new Post(mCurrentUser, post_location, post_group, post_content, post_file_path);
+                ProcessPost processPost = new ProcessPost();
+                processPost.execute(post);
+            }
+        });
 
         mImageLayout = new CustomImageLayout(getContext());
         mVideoLayout = new CustomVideoLayout(getContext());
@@ -338,7 +383,7 @@ public class PostFragment extends Fragment implements GetAllGroup.OnGetAllGroup,
             final int unmaskedRequestCode = requestCode & 0x0000ffff;
             Log.d(TAG, "onActivityResult: unmaskedRequestCode: " + unmaskedRequestCode);
 
-            mIsFileExist = true;
+
             switch (unmaskedRequestCode) {
                 case ADD_LOCATION_REQUEST:
                     if (resultCode == RESULT_OK && data != null) {
@@ -348,11 +393,13 @@ public class PostFragment extends Fragment implements GetAllGroup.OnGetAllGroup,
                     break;
                 case TAKEPHOTO_REQUEST:
                     if(resultCode == RESULT_OK && data != null) {
+                        mIsFileExist = true;
                         Log.d(TAG, "onActivityResult: TAKEPHOTO_REQUEST");
                     }
                     break;
                 case GALLERY_IMAGE_REQUEST:
                     if (resultCode == RESULT_OK && data != null) {
+                        mIsFileExist = true;
                         Log.d(TAG, "onActivityResult: unmaskedRequestCode: " + unmaskedRequestCode);
                         Uri selectedImage = data.getData();
                         String[] filePathColumn = {MediaStore.Images.Media.DATA};
@@ -371,6 +418,7 @@ public class PostFragment extends Fragment implements GetAllGroup.OnGetAllGroup,
                     break;
                 case TAKEVIDEO_REQUEST:
                     if(resultCode == RESULT_OK && data != null) {
+                        mIsFileExist = true;
                         Log.d(TAG, "onActivityResult: unmaskedRequestCode: " + unmaskedRequestCode);
                         Uri uri = data.getData();
                         Log.d(TAG, "onActivityResult: uri" + uri + ", uri path: " + uri.getPath());
@@ -379,6 +427,7 @@ public class PostFragment extends Fragment implements GetAllGroup.OnGetAllGroup,
                     break;
                 case GALLERY_VIDEO_REQUEST:
                     if (resultCode == RESULT_OK && data != null) {
+                        mIsFileExist = true;
                         Log.d(TAG, "onActivityResult: unmaskedRequestCode: " + unmaskedRequestCode);
                         Uri selectedVideo = data.getData();
                         String[] filePathColumn = {MediaStore.Video.Media.DATA};
@@ -421,7 +470,7 @@ public class PostFragment extends Fragment implements GetAllGroup.OnGetAllGroup,
     public void onResume() {
         Log.d(TAG, "onResume: called");
 
-        if (mIsFileExist) {
+        if (mIsFileExist && mPostFileContainer.getChildCount() == 0) {
             if (mLoadedImagePath != null) {
                 Bitmap bitmap = BitmapFactory.decodeFile(mLoadedImagePath);
                 bitmap = Bitmap.createScaledBitmap(bitmap,
@@ -456,6 +505,7 @@ public class PostFragment extends Fragment implements GetAllGroup.OnGetAllGroup,
     @Override
     public void onGetAllGroupComplete(final List<Group> groups) {
         Log.d(TAG, "onGetAllGroupComplete: called");
+        mGroups = groups;
         ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(),R.layout.spinner_item,prepareGroupList(groups));
         adapter.setDropDownViewResource(R.layout.simple_spinner_dropdown_item);
         mSpinner.setAdapter(adapter);
@@ -481,9 +531,8 @@ public class PostFragment extends Fragment implements GetAllGroup.OnGetAllGroup,
     @Override
     public void onProcessUserFinished(UserEntity user) {
         Log.d(TAG, "onProcessUserFinished: starts");
-        Log.d(TAG, "onProcessUserFinished: fullname: " + user.getFullname());
+        mCurrentUser = user;
         mFullname.setText(user.getFullname());
-        Log.d(TAG, "onProcessUserFinished: imageuri: " + user.getImageUri());
         Picasso.get().load(user.getImageUri())
                 .memoryPolicy(MemoryPolicy.NO_CACHE)
                 .placeholder(R.drawable.placeholder)
@@ -508,4 +557,5 @@ public class PostFragment extends Fragment implements GetAllGroup.OnGetAllGroup,
         
         return false;
     }
+
 }

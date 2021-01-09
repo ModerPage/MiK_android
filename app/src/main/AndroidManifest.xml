@@ -29,7 +29,6 @@
                 android:resource="@xml/file_paths" />
         </provider>
 
-        <activity android:name=".GoogleMapActivity"></activity>
 
         <meta-data
             android:name="com.google.android.geo.API_KEY"
@@ -42,6 +41,12 @@
         <meta-data
             android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />
+
+        <service
+            android:name="me.modernpage.task.GeocodeAddressService"
+            android:exported="false" />
+
+        <activity android:name=".GoogleMapActivity"></activity>
 
         <activity
             android:name=".HelpFeedbackActivity"

@@ -77,7 +77,7 @@ public class UploadImage extends AsyncTask<Bitmap,Void,String> {
     protected String doInBackground(Bitmap... bitmaps) {
         if(bitmaps == null)
             return null;
-        HttpURLConnection connection;
+        HttpURLConnection connection = null;
         try {
             URL url = new URL(UPLOADIMAGE_URL);
             connection =(HttpURLConnection)url.openConnection();
@@ -110,6 +110,9 @@ public class UploadImage extends AsyncTask<Bitmap,Void,String> {
 
         } catch (IOException e) {
             Log.e(TAG, "doInBackground: " + e );
+        } finally {
+            if (connection != null)
+                connection.disconnect();
         }
         return null;
     }

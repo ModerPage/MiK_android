@@ -17,6 +17,9 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+    packagingOptions {
+        exclude 'META-INF/DEPENDENCIES'
+    }
 }
 
 dependencies {
@@ -32,12 +35,27 @@ dependencies {
     implementation 'com.google.android.material:material:1.2.1'
     implementation 'de.hdodenhof:circleimageview:3.1.0'
     implementation 'com.squareup.picasso:picasso:2.71828'
-
-//    google maps and places api
+    //    google maps and places api
     implementation 'com.google.android.gms:play-services-base:17.5.0'
     implementation 'com.google.android.gms:play-services-maps:17.0.0'
     implementation 'com.google.android.gms:play-services-location:17.1.0'
     implementation 'com.google.android.gms:play-services-places:17.0.0'
     implementation 'com.google.android.libraries.places:places:2.4.0'
     implementation 'com.seatgeek:placesautocomplete:0.3-SNAPSHOT'
+    implementation files('libs/commons-cli-1.4.jar')
+    implementation files('libs/commons-codec-1.13.jar')
+    implementation files('libs/httpclient5-5.0.3.jar')
+    implementation files('libs/httpclient5-cache-5.0.3.jar')
+    implementation files('libs/httpclient5-fluent-5.0.3.jar')
+    implementation files('libs/httpclient5-testing-5.0.3.jar')
+    implementation files('libs/httpclient5-win-5.0.3.jar')
+    implementation files('libs/httpcore5-5.0.2.jar')
+    implementation files('libs/httpcore5-h2-5.0.2.jar')
+    implementation files('libs/httpcore5-testing-5.0.2.jar')
+    implementation files('libs/httpcore5-reactive-5.0.2.jar')
+    implementation files('libs/jna-5.2.0.jar')
+    implementation files('libs/jna-platform-5.2.0.jar')
+    implementation files('libs/reactive-streams-1.0.2.jar')
+    implementation files('libs/rxjava-2.2.8.jar')
+    implementation files('libs/slf4j-api-1.7.25.jar')
 }

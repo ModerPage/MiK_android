@@ -1,5 +1,6 @@
 package me.modernpage.activity;
 
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.ConstraintSet;
 
@@ -21,10 +22,11 @@ import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+import me.modernpage.Constants;
 import me.modernpage.entity.UserEntity;
 import me.modernpage.task.RegisterUser;
 
-public class RegisterActivity extends BaseActivity implements RegisterUser.OnRegisterUser {
+public class RegisterActivity extends AppCompatActivity implements RegisterUser.OnRegisterUser {
     private static final String TAG = "RegisterActivity";
     private static final String REGISTERED = "registered";
     private static final String USERNAME_EXIST = "username_exist";
@@ -49,7 +51,7 @@ public class RegisterActivity extends BaseActivity implements RegisterUser.OnReg
                 if(isBlank(mUsername.getText().toString())) {
                     mUsername.setError("the field can't be empty");
                     isValidRegister = false;
-                } else if(isNotValid(mUsername.getText().toString().trim(), USERNAME_REGEX)) {
+                } else if (Constants.Regex.isNotValid(mUsername.getText().toString().trim(), Constants.Regex.USERNAME_REGEX)) {
                     isValidRegister = false;
                     mUsername.setError("username must be 6 characters long at least and can contain \".\" \"_\" chars");
                 }
@@ -57,7 +59,7 @@ public class RegisterActivity extends BaseActivity implements RegisterUser.OnReg
                 if(isBlank(mFullname.getText().toString())) {
                     mFullname.setError("the field can't be empty");
                     isValidRegister = false;
-                } else if(isNotValid(mFullname.getText().toString().trim(), FULLNAME_REGEX)) {
+                } else if (Constants.Regex.isNotValid(mFullname.getText().toString().trim(), Constants.Regex.FULLNAME_REGEX)) {
                     isValidRegister = false;
                     mFullname.setError("full name must be 8 characters long at least");
                 }
@@ -65,7 +67,7 @@ public class RegisterActivity extends BaseActivity implements RegisterUser.OnReg
                 if(isBlank(mEmail.getText().toString())) {
                     mEmail.setError("the field can't be empty");
                     isValidRegister = false;
-                } else if(isNotValid(mEmail.getText().toString().trim(), EMAIL_REGEX)) {
+                } else if (Constants.Regex.isNotValid(mEmail.getText().toString().trim(), Constants.Regex.EMAIL_REGEX)) {
                     mEmail.setError("invalid email address");
                     isValidRegister = false;
                 }
@@ -73,7 +75,7 @@ public class RegisterActivity extends BaseActivity implements RegisterUser.OnReg
                 if(isBlank(mPassword.getText().toString())) {
                     mPassword.setError("the field can't be empty");
                     isValidRegister = false;
-                } else if(isNotValid(mPassword.getText().toString().trim(), PASSWORD_REGEX)) {
+                } else if (Constants.Regex.isNotValid(mPassword.getText().toString().trim(), Constants.Regex.PASSWORD_REGEX)) {
                     isValidRegister = false;
                     mPassword.setError("password must be 8 characters long at least and contain a digit");
                 }

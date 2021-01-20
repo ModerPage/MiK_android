@@ -1,5 +1,7 @@
 package me.modernpage.fragment.group;
 
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -11,9 +13,12 @@ import java.util.List;
 import me.modernpage.entity.Group;
 
 public class GroupPagerAdapter extends FragmentPagerAdapter {
+    private static final String TAG = "GroupPagerAdapter";
     private List<Group> mGroups;
+
     public GroupPagerAdapter(@NonNull FragmentManager fm, List<Group> groups) {
         super(fm, BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT);
+        Log.d(TAG, "GroupPagerAdapter: called");
         mGroups = groups;
     }
 
@@ -21,9 +26,11 @@ public class GroupPagerAdapter extends FragmentPagerAdapter {
     @Override
     public Fragment getItem(int position) {
         if(position == 0) {
+            Log.d(TAG, "getItem: position 0");
             return PublicGroupFragment.newInstance(mGroups);
         }
         if(position == 1) {
+            Log.d(TAG, "getItem: position 1");
             return PrivateGroupFragment.newInstance(mGroups);
         }
         return null;

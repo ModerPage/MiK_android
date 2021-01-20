@@ -11,18 +11,16 @@ import android.widget.ProgressBar;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.ConstraintSet;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+import me.modernpage.Constants;
 import me.modernpage.activity.R;
 
-import static me.modernpage.activity.BaseActivity.LOGIN_URL;
 
 public class ProcessLogin extends AsyncTask<Object,Void,String> {
     private static final String TAG = "ProcessLogin";
@@ -65,7 +63,7 @@ public class ProcessLogin extends AsyncTask<Object,Void,String> {
             return null;
         HttpURLConnection connection = null;
         try {
-            URL url = new URL(LOGIN_URL);
+            URL url = new URL(Constants.Network.LOGIN_URL);
             connection =(HttpURLConnection)url.openConnection();
             connection.setRequestMethod("POST");
             connection.setReadTimeout(10000);
@@ -90,6 +88,9 @@ public class ProcessLogin extends AsyncTask<Object,Void,String> {
             return sb.toString();
         } catch (IOException e) {
             Log.e(TAG, "doInBackground: " + e);
+        } finally {
+            if (connection != null)
+                connection.disconnect();
         }
 
         return null;

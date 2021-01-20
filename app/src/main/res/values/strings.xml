@@ -39,4 +39,7 @@
     <string name="post_content_hint">What\'s on your mind?</string>
     <string name="enter_address_city_or_zip_code">Enter Address, City or Zip Code</string>
     <string name="submit">Submit</string>
+    <string name="userpost_like_text">Like</string>
+    <string name="userpost_comment_text">Comment</string>
+    <string name="userpost_share_text">Share</string>
 </resources>

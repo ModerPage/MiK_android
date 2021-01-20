@@ -1,6 +1,7 @@
 package me.modernpage.activity;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.preference.PreferenceManager;
 
 import android.content.Intent;
@@ -14,11 +15,11 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 
-
+import me.modernpage.Constants;
 import me.modernpage.task.ProcessLogin;
 
 
-public class LoginActivity extends BaseActivity implements ProcessLogin.OnProcessLogin {
+public class LoginActivity extends AppCompatActivity implements ProcessLogin.OnProcessLogin {
     private static final String TAG = "LoginActivity";
 
     private static final String LOGGEDIN = "loggedin";
@@ -33,14 +34,14 @@ public class LoginActivity extends BaseActivity implements ProcessLogin.OnProces
 
     @Override
     protected void onSaveInstanceState(@NonNull Bundle outState) {
-        outState.putBoolean(LOGIN_REMEMBER_EXTRA, isRemembered);
+        outState.putBoolean(Constants.User.LOGIN_REMEMBER_EXTRA, isRemembered);
         super.onSaveInstanceState(outState);
     }
 
     @Override
     protected void onRestoreInstanceState(@NonNull Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
-        isRemembered = savedInstanceState.getBoolean(LOGIN_REMEMBER_EXTRA);
+        isRemembered = savedInstanceState.getBoolean(Constants.User.LOGIN_REMEMBER_EXTRA);
         mCheckBox.setChecked(isRemembered);
     }
 
@@ -53,7 +54,7 @@ public class LoginActivity extends BaseActivity implements ProcessLogin.OnProces
         mCheckBox = findViewById(R.id.login_checkbox);
 
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        isRemembered = sharedPreferences.getBoolean(LOGIN_REMEMBER_EXTRA,false);
+        isRemembered = sharedPreferences.getBoolean(Constants.User.LOGIN_REMEMBER_EXTRA, false);
         if(isRemembered) {
             mCheckBox.setChecked(true);
             String username = sharedPreferences.getString(LOGIN_USERNAME,null);
@@ -76,14 +77,14 @@ public class LoginActivity extends BaseActivity implements ProcessLogin.OnProces
                 if(isBlank(username_edt.getText().toString())) {
                     isValidLogin = false;
                     username_edt.setError("the field can't be blank");
-                } else if(isNotValid(username_edt.getText().toString().trim(), USERNAME_REGEX)) {
+                } else if (Constants.Regex.isNotValid(username_edt.getText().toString().trim(), Constants.Regex.USERNAME_REGEX)) {
                     isValidLogin = false;
                     username_edt.setError("username must be 6 characters long at least and can contain \".\" \"_\" chars");
                 }
 
                 if(isBlank(password_edt.getText().toString())) {
                     password_edt.setError("the field can't be blank");
-                } else if(isNotValid(password_edt.getText().toString().trim(), PASSWORD_REGEX)) {
+                } else if (Constants.Regex.isNotValid(password_edt.getText().toString().trim(), Constants.Regex.PASSWORD_REGEX)) {
                     isValidLogin = false;
                     password_edt.setError("password must be 8 characters long at least and contain a digit");
                 }
@@ -121,13 +122,13 @@ public class LoginActivity extends BaseActivity implements ProcessLogin.OnProces
                     EditText passwordEt = findViewById(R.id.login_password);
                     sharedPreferences.edit().putString(LOGIN_USERNAME,usernameEt.getText().toString().trim()).
                             putString(LOGIN_PASSWORD,passwordEt.getText().toString().trim()).apply();
-                    sharedPreferences.edit().putBoolean(LOGIN_REMEMBER_EXTRA,isRemembered).apply();
+                    sharedPreferences.edit().putBoolean(Constants.User.LOGIN_REMEMBER_EXTRA, isRemembered).apply();
                 }
 
                 //goto home page
                 EditText usernameEt = findViewById(R.id.login_username);
                 Intent intent = new Intent(this, MainActivity.class);
-                intent.putExtra(USERNAME_EXTRA,usernameEt.getText().toString().trim());
+                intent.putExtra(Constants.User.USERNAME_EXTRA, usernameEt.getText().toString().trim());
                 startActivity(intent);
                 finish();
             }

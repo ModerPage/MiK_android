@@ -41,6 +41,16 @@
             app:menu="@menu/bottom_nav"
             app:labelVisibilityMode="labeled" />
 
+        <ProgressBar
+            android:id="@+id/main_progress_bar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="@+id/main_frag_container"
+            app:layout_constraintStart_toStartOf="@+id/main_frag_container"
+            app:layout_constraintTop_toTopOf="@+id/toolbar" />
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <com.google.android.material.navigation.NavigationView

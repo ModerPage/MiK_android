@@ -7,9 +7,10 @@ import java.io.ObjectInputStream;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
+
+import me.modernpage.Constants;
 import me.modernpage.entity.UserEntity;
 
-import static me.modernpage.activity.BaseActivity.GETUSER_URL;
 
 public class ProcessUser extends AsyncTask<String,Void, UserEntity> {
     private static final String TAG = "PocessUser";
@@ -36,7 +37,7 @@ public class ProcessUser extends AsyncTask<String,Void, UserEntity> {
             return null;
         HttpURLConnection connection;
         try {
-            URL url = new URL(GETUSER_URL);
+            URL url = new URL(Constants.Network.GETUSER_URL);
             connection =(HttpURLConnection)url.openConnection();
             connection.setRequestMethod("POST");
             connection.setReadTimeout(10000);

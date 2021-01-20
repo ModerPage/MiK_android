@@ -1,30 +1,25 @@
 package me.modernpage.activity;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-
 import android.Manifest;
-import android.app.Activity;
-import android.app.IntentService;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Address;
-import android.location.Geocoder;
 import android.location.Location;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.ResultReceiver;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
@@ -36,22 +31,21 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.snackbar.Snackbar;
 import com.seatgeek.placesautocomplete.DetailsCallback;
 import com.seatgeek.placesautocomplete.OnPlaceSelectedListener;
 import com.seatgeek.placesautocomplete.PlacesAutocompleteTextView;
 import com.seatgeek.placesautocomplete.model.Place;
 import com.seatgeek.placesautocomplete.model.PlaceDetails;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Locale;
 
 import me.modernpage.Constants;
 import me.modernpage.PermissionUtils;
 import me.modernpage.task.GeocodeAddressService;
 
-public class GoogleMapActivity extends BaseActivity implements OnMapReadyCallback, ActivityCompat.OnRequestPermissionsResultCallback {
+public class GoogleMapActivity extends AppCompatActivity implements OnMapReadyCallback, ActivityCompat.OnRequestPermissionsResultCallback {
     private static final String TAG = "GoogleMapActivity";
     public static String LAST_ADDRESS_EXTRA = "last_address";
     private static final int LOCATION_PERMESSION_REQUEST_CODE = 1;
@@ -64,6 +58,7 @@ public class GoogleMapActivity extends BaseActivity implements OnMapReadyCallbac
     private PlacesAutocompleteTextView mSearchText;
     private ImageView mMyLocation;
     private ProgressBar mProgressBar;
+    private FloatingActionButton mSubmit;
 
     private Address mLastAddress;
 
@@ -76,6 +71,7 @@ public class GoogleMapActivity extends BaseActivity implements OnMapReadyCallbac
         mSearchText = findViewById(R.id.input_search);
         mMyLocation = findViewById(R.id.my_location);
         mProgressBar = findViewById(R.id.map_progress_bar);
+        mSubmit = findViewById(R.id.submit_location);
 
         if (savedInstanceState != null) {
             mLastAddress = savedInstanceState.getParcelable(LAST_ADDRESS_EXTRA);
@@ -88,7 +84,7 @@ public class GoogleMapActivity extends BaseActivity implements OnMapReadyCallbac
             Log.d(TAG, "onCreate: requesting permission");
             String[] requestPermission = {Manifest.permission.ACCESS_FINE_LOCATION};
             PermissionUtils.requestPermissions(this, requestPermission, LOCATION_PERMESSION_REQUEST_CODE);
-            PermissionUtils.hasAskedForPermission(this, requestPermission[0]);
+            PermissionUtils.markedPermissionAsAsked(this, requestPermission[0]);
         }
     }
 
@@ -141,7 +137,7 @@ public class GoogleMapActivity extends BaseActivity implements OnMapReadyCallbac
                     findLocation.putExtra(Constants.Gecode.EXTRA_FETCH_TYPE, Constants.Gecode.USE_ADDRESS_NAME);
                     findLocation.putExtra(Constants.Gecode.EXTRA_LOCATION_NAME_DATA, searchQuery);
 
-                    hideKeyboard();
+                    Constants.hideKeyboard(GoogleMapActivity.this);
                     mProgressBar.setVisibility(View.VISIBLE);
                     getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
                             WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
@@ -158,7 +154,7 @@ public class GoogleMapActivity extends BaseActivity implements OnMapReadyCallbac
                 Log.d(TAG, "onPlaceSelected: " + place.description);
                 mSearchText.getDetailsFor(place, mDetailsCallback);
 
-                hideKeyboard();
+                Constants.hideKeyboard(GoogleMapActivity.this);
             }
         });
 
@@ -170,7 +166,60 @@ public class GoogleMapActivity extends BaseActivity implements OnMapReadyCallbac
             }
         });
 
-        hideKeyboard();
+        mSubmit.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                final Intent data = new Intent();
+                if (mLastAddress == null) {
+                    Location location = mSearchText.getCurrentLocation();
+                    Intent findLocation = new Intent(GoogleMapActivity.this, GeocodeAddressService.class);
+                    findLocation.putExtra(Constants.Gecode.EXTRA_RESULT_RECEIVER, new ResultReceiver(null) {
+                        @Override
+                        protected void onReceiveResult(int resultCode, Bundle resultData) {
+                            if (resultCode == Constants.Gecode.SUCCESS_RESULT) {
+                                final Address address = resultData.getParcelable(Constants.Gecode.RESULT_ADDRESS);
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        mProgressBar.setVisibility(View.GONE);
+                                        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+
+                                        data.putExtra(LAST_ADDRESS_EXTRA, address);
+                                        setResult(RESULT_OK, data);
+                                        finish();
+                                    }
+                                });
+                            } else {
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        mProgressBar.setVisibility(View.GONE);
+                                        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+
+                                        Toast.makeText(GoogleMapActivity.this, "Address Not Found", Toast.LENGTH_LONG).show();
+                                    }
+                                });
+
+                            }
+                        }
+                    });
+                    findLocation.putExtra(Constants.Gecode.EXTRA_FETCH_TYPE, Constants.Gecode.USE_ADDRESS_LOCATION);
+                    findLocation.putExtra(Constants.Gecode.EXTRA_LOCATION_LATLNG, new LatLng(location.getLatitude(), location.getLongitude()));
+
+                    getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
+                            WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+                    mProgressBar.setVisibility(View.VISIBLE);
+                    startService(findLocation);
+                } else {
+                    data.putExtra(LAST_ADDRESS_EXTRA, mLastAddress);
+                    setResult(RESULT_OK, data);
+                    finish();
+                }
+                Log.d(TAG, "submitLocation: lastAddress: " + mLastAddress);
+            }
+        });
+
+        Constants.hideKeyboard(GoogleMapActivity.this);
     }
 
     private DetailsCallback mDetailsCallback = new DetailsCallback() {
@@ -317,11 +366,21 @@ public class GoogleMapActivity extends BaseActivity implements OnMapReadyCallbac
     protected void onResumeFragments() {
         Log.d(TAG, "onResumeFragments: called");
         if (permissionDenied) {
-            if (!PermissionUtils.hasPermission(GoogleMapActivity.this, Manifest.permission.ACCESS_FINE_LOCATION)) {
-                Log.d(TAG, "onResumeFragments: go to settings");
-                PermissionUtils.goToAppSettings(this);
+            if (!PermissionUtils.hasPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)) {
+                Snackbar.make(mSubmit, "Map is not available, give it permission to use", Snackbar.LENGTH_INDEFINITE)
+                        .setAction("Grant Access", new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                if (PermissionUtils.shouldAskForPermission(GoogleMapActivity.this, Manifest.permission.ACCESS_FINE_LOCATION)) {
+                                    PermissionUtils.requestPermissions(GoogleMapActivity.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_PERMESSION_REQUEST_CODE);
+                                    Log.d(TAG, "onClick: request permission");
+                                } else {
+                                    PermissionUtils.goToAppSettings(GoogleMapActivity.this);
+                                    Log.d(TAG, "onClick: goto app settings");
+                                }
+                            }
+                        }).show();
             } else {
-                Log.d(TAG, "onResumeFragments: got right permission");
                 permissionDenied = false;
                 init();
             }
@@ -338,53 +397,4 @@ public class GoogleMapActivity extends BaseActivity implements OnMapReadyCallbac
         super.onSaveInstanceState(outState);
     }
 
-    public void submitLocation(View view) {
-        final Intent data = new Intent();
-        if (mLastAddress == null) {
-            Location location = mSearchText.getCurrentLocation();
-            Intent findLocation = new Intent(GoogleMapActivity.this, GeocodeAddressService.class);
-            findLocation.putExtra(Constants.Gecode.EXTRA_RESULT_RECEIVER, new ResultReceiver(null) {
-                @Override
-                protected void onReceiveResult(int resultCode, Bundle resultData) {
-                    if (resultCode == Constants.Gecode.SUCCESS_RESULT) {
-                        final Address address = resultData.getParcelable(Constants.Gecode.RESULT_ADDRESS);
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                mProgressBar.setVisibility(View.GONE);
-                                getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
-
-                                data.putExtra(LAST_ADDRESS_EXTRA, address);
-                                setResult(RESULT_OK, data);
-                                finish();
-                            }
-                        });
-                    } else {
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                mProgressBar.setVisibility(View.GONE);
-                                getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
-
-                                Toast.makeText(GoogleMapActivity.this, "Address Not Found", Toast.LENGTH_LONG).show();
-                            }
-                        });
-
-                    }
-                }
-            });
-            findLocation.putExtra(Constants.Gecode.EXTRA_FETCH_TYPE, Constants.Gecode.USE_ADDRESS_LOCATION);
-            findLocation.putExtra(Constants.Gecode.EXTRA_LOCATION_LATLNG, new LatLng(location.getLatitude(), location.getLongitude()));
-
-            getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
-                    WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
-            mProgressBar.setVisibility(View.VISIBLE);
-            startService(findLocation);
-        } else {
-            data.putExtra(LAST_ADDRESS_EXTRA, mLastAddress);
-            setResult(RESULT_OK, data);
-            finish();
-        }
-        Log.d(TAG, "submitLocation: lastAddress: " + mLastAddress);
-    }
 }

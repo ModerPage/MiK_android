@@ -12,6 +12,9 @@ public class Location {
     private String city;
     private String country;
 
+    public Location() {
+    }
+
     public Location(double longitude, double latitude, String addressLine, String city, String country) {
         this.longitude = longitude;
         this.latitude = latitude;

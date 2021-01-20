@@ -11,10 +11,13 @@ public class Post {
     private Location postLocation;
     private Collection<Comment> postComments = new ArrayList<>();
     private Group postGroup;
-    private Collection<Like> like = new ArrayList<>();
+    private Collection<Like> postLikes = new ArrayList<>();
     private Date postedDate;
     private String postText;
     private String fileURL;
+
+    public Post() {
+    }
 
     public Post(UserEntity postOwner, Location postLocation, Group postGroup, String postText, String fileURL) {
         this.postOwner = postOwner;
@@ -64,12 +67,12 @@ public class Post {
         this.postGroup = postGroup;
     }
 
-    public Collection<Like> getLike() {
-        return like;
+    public Collection<Like> getPostLikes() {
+        return postLikes;
     }
 
-    public void setLike(Collection<Like> like) {
-        this.like = like;
+    public void setPostLikes(Collection<Like> postLikes) {
+        this.postLikes = postLikes;
     }
 
     public Date getPostedDate() {

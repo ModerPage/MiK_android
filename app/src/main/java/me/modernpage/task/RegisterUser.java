@@ -7,24 +7,20 @@ import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.ProgressBar;
-import android.widget.Toast;
 
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.ConstraintSet;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.ObjectOutputStream;
 import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+import me.modernpage.Constants;
 import me.modernpage.activity.R;
-import me.modernpage.activity.RegisterActivity;
 
-import static me.modernpage.activity.BaseActivity.REGISTER_URL;
 
 public class RegisterUser extends AsyncTask<Object,Void,String>  {
     private static final String TAG = "RegisterUser";
@@ -69,7 +65,7 @@ public class RegisterUser extends AsyncTask<Object,Void,String>  {
             return null;
         }
         try {
-            URL url = new URL(REGISTER_URL);
+            URL url = new URL(Constants.Network.REGISTER_URL);
             connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("POST");
             connection.setReadTimeout(10000);

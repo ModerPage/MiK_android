@@ -11,9 +11,10 @@ import android.widget.EditText;
 import java.net.URI;
 import java.net.URL;
 
+import me.modernpage.Constants;
 import me.modernpage.entity.UserEntity;
 
-public class HelpFeedbackActivity extends BaseActivity {
+public class HelpFeedbackActivity extends AppCompatActivity {
     private UserEntity mCurrentUser;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -21,7 +22,7 @@ public class HelpFeedbackActivity extends BaseActivity {
         setContentView(R.layout.activity_help_feedback);
 
         Intent intent = getIntent();
-        mCurrentUser = (UserEntity) intent.getExtras().get(CURRENT_USER_EXTRA);
+        mCurrentUser = (UserEntity) intent.getExtras().get(Constants.User.CURRENT_USER_EXTRA);
     }
 
     public void onSend(View view) {

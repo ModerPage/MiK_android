@@ -1,6 +1,5 @@
 package me.modernpage.fragment.group;
 
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,6 +14,7 @@ import com.squareup.picasso.Picasso;
 import java.util.ArrayList;
 import java.util.List;
 
+import me.modernpage.Constants;
 import me.modernpage.activity.R;
 import me.modernpage.entity.Group;
 
@@ -54,10 +54,8 @@ public class GroupRecViewAdapter extends RecyclerView.Adapter<GroupRecViewAdapte
             holder.mImageView.setImageResource(R.drawable.placeholder);
             holder.mTextView.setText(R.string.empty_private_group);
         } else {
-            Log.d(TAG, "onBindViewHolder: " + mGroups.get(position).getImageURI());
-            Log.d(TAG, "onBindViewHolder: " + holder.mImageView.getLayoutParams().width + ", " + holder.mImageView.getLayoutParams().height);
             Picasso.get()
-                    .load(mGroups.get(position).getImageURI())
+                    .load(Constants.Network.BASE_URL + mGroups.get(position).getImageURI())
                     .placeholder(R.drawable.placeholder)
                     .error(R.drawable.placeholder)
                     .into(holder.mImageView);

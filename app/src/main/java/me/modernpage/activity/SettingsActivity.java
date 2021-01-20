@@ -1,6 +1,7 @@
 package me.modernpage.activity;
 
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.DialogFragment;
 import androidx.preference.PreferenceManager;
 
@@ -28,12 +29,13 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
+import me.modernpage.Constants;
 import me.modernpage.entity.UserEntity;
 import me.modernpage.fragment.DatePickerFragment;
 import me.modernpage.task.UpdateUser;
 import me.modernpage.task.UploadImage;
 
-public class SettingsActivity extends BaseActivity implements UpdateUser.OnUpdateUser, UploadImage.OnUploadeImage {
+public class SettingsActivity extends AppCompatActivity implements UpdateUser.OnUpdateUser, UploadImage.OnUploadeImage {
     private static final int TAKEPHOTO_REQUEST = 0;
     private static final int GALLERY_REQUEST = 1;
     private static final String IMAGE_UPLOADED = "image_uploaded";
@@ -65,7 +67,7 @@ public class SettingsActivity extends BaseActivity implements UpdateUser.OnUpdat
         mPhoto = findViewById(R.id.settings_image);
 
         Intent intent = getIntent();
-        mCurrentUser = (UserEntity) intent.getExtras().get(CURRENT_USER_EXTRA);
+        mCurrentUser = (UserEntity) intent.getExtras().get(Constants.User.CURRENT_USER_EXTRA);
         if(mCurrentUser != null) {
             mUsername.getEditText().setText(mCurrentUser.getUsername());
             mFullname.getEditText().setText(mCurrentUser.getFullname());
@@ -172,7 +174,7 @@ public class SettingsActivity extends BaseActivity implements UpdateUser.OnUpdat
         if(isBlank(fullname)) {
             mFullname.setError("the field can't be empty");
             validSettings = false;
-        } else if(isNotValid(fullname.trim(), FULLNAME_REGEX)) {
+        } else if (Constants.Regex.isNotValid(fullname.trim(), Constants.Regex.FULLNAME_REGEX)) {
             validSettings = false;
             mFullname.setError("full name must be 8 characters long at least");
         }
@@ -181,14 +183,14 @@ public class SettingsActivity extends BaseActivity implements UpdateUser.OnUpdat
         if(isBlank(username)) {
             mUsername.setError("the field can't be empty");
             validSettings = false;
-        } else if(isNotValid(username.trim(), USERNAME_REGEX)) {
+        } else if (Constants.Regex.isNotValid(username.trim(), Constants.Regex.USERNAME_REGEX)) {
             mUsername.setError("username must be 6 characters long at least and can contain \".\" \"_\" chars");
             validSettings = false;
         }
 
         String password = mPassword.getEditText().getText().toString();
         if(!isBlank(password)) {
-            if(isNotValid(password.trim(), PASSWORD_REGEX)) {
+            if (Constants.Regex.isNotValid(password.trim(), Constants.Regex.PASSWORD_REGEX)) {
                 mPassword.setError("password must be 8 characters long at least and contain a digit");
                 validSettings = false;
             }
@@ -235,7 +237,7 @@ public class SettingsActivity extends BaseActivity implements UpdateUser.OnUpdat
             Toast.makeText(this,"User personal information updated successfully", Toast.LENGTH_SHORT).show();
             if(mLogin) {
                 SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-                sharedPreferences.edit().remove(LOGIN_REMEMBER_EXTRA).apply();
+                sharedPreferences.edit().remove(Constants.User.LOGIN_REMEMBER_EXTRA).apply();
 
                 Intent intent = new Intent(this, LoginActivity.class);
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);

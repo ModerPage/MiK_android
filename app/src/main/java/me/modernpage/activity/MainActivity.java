@@ -1,16 +1,6 @@
 package me.modernpage.activity;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.ActionBarDrawerToggle;
-import androidx.appcompat.widget.Toolbar;
-import androidx.core.view.GravityCompat;
-import androidx.drawerlayout.widget.DrawerLayout;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
-
 import android.content.Intent;
-import android.content.res.Configuration;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.util.Log;
@@ -19,25 +9,45 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.FrameLayout;
+import android.view.WindowManager;
+import android.widget.ProgressBar;
 import android.widget.TextView;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.ActionBarDrawerToggle;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigation.NavigationView;
 import com.squareup.picasso.MemoryPolicy;
 import com.squareup.picasso.Picasso;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
+
 import de.hdodenhof.circleimageview.CircleImageView;
+import me.modernpage.Constants;
+import me.modernpage.entity.Group;
 import me.modernpage.entity.UserEntity;
-import me.modernpage.fragment.group.GroupFragment;
-import me.modernpage.fragment.HomeFragment;
+import me.modernpage.fragment.home.HomeFragment;
 import me.modernpage.fragment.MapFragment;
+import me.modernpage.fragment.group.GroupFragment;
 import me.modernpage.fragment.post.PostFragment;
+import me.modernpage.task.GetAllGroup;
 import me.modernpage.task.ProcessUser;
 
-public class MainActivity extends BaseActivity implements BottomNavigationView.OnNavigationItemSelectedListener, ProcessUser.OnProcessUser {
+public class MainActivity extends AppCompatActivity implements BottomNavigationView.OnNavigationItemSelectedListener, ProcessUser.OnProcessUser, GetAllGroup.OnGetAllGroup {
     private static final String TAG = "MainActivity";
     private static final String ACTIVE_FRAGMENT_EXTRA = "active_fragment";
+
+
     private enum FragmentStatus {HOME_FRAGMENT, POST_FRAGMENT, MAP_FRAGMENT, GROUP_FRAGMENT}
 
     private Toolbar mToolbar;
@@ -45,6 +55,10 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
     private UserEntity mCurrentUser;
     private String mCurrentUsername;
     private FragmentStatus mFragmentStatus;
+    private CountDownLatch mCountDownLatch;
+    private List<Group> mCurrentGroups;
+    private ProgressBar mProgressBar;
+    private BottomNavigationView mBottomNavigationView;
 
     private FragmentManager mFragmentManager;
     private Fragment mHomeFragment;
@@ -53,7 +67,6 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
     private Fragment mGroupFragment;
     private Fragment mActiveFragment;
 
-
     private NavigationView mNavigationView;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,20 +74,61 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mCurrentUsername = getIntent().getStringExtra(USERNAME_EXTRA);
+        mProgressBar = findViewById(R.id.main_progress_bar);
+        mCurrentUsername = getIntent().getStringExtra(Constants.User.USERNAME_EXTRA);
         mFragmentManager = getSupportFragmentManager();
+
         if (mFragmentManager.getFragments().isEmpty()) {
             mHomeFragment = new HomeFragment();
-            mPostFragment = PostFragment.newInstance(mCurrentUsername);
             mMapFragment = new MapFragment();
-            mGroupFragment = new GroupFragment();
             mActiveFragment = mHomeFragment;
             mFragmentStatus = FragmentStatus.HOME_FRAGMENT;
+
+            mCountDownLatch = new CountDownLatch(2);
+
+            GetAllGroup getAllGroup = new GetAllGroup(this);
+            getAllGroup.execute();
+
+            ProcessUser processUser = new ProcessUser(this);
+            processUser.execute(mCurrentUsername);
+
+            Thread thread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        Log.d(TAG, "run: before await");
+                        mCountDownLatch.await();
+                        Log.d(TAG, "run: after await");
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Log.d(TAG, "runOnUiThread: called");
+                                MainActivity.this.stopProgressBar();
+                                mPostFragment = PostFragment.newInstance(mCurrentUser, mCurrentGroups);
+                                mGroupFragment = GroupFragment.newInstance(mCurrentGroups);
+                                mFragmentManager.beginTransaction().add(R.id.main_frag_container, mGroupFragment, "4").hide(mGroupFragment).commit();
+                                mFragmentManager.beginTransaction().add(R.id.main_frag_container, mPostFragment, "3").hide(mPostFragment).commit();
+                            }
+                        });
+
+                    } catch (InterruptedException e) {
+                        Log.e(TAG, "run: InterruptedException " + e.getMessage(), e);
+                    }
+                }
+            });
+
+            startProgressBar();
+            thread.start();
+        } else {
+            mHomeFragment = mFragmentManager.findFragmentByTag("1");
+            mMapFragment = mFragmentManager.findFragmentByTag("2");
+            mPostFragment = mFragmentManager.findFragmentByTag("3");
+            mGroupFragment = mFragmentManager.findFragmentByTag("4");
         }
 
 
-
-        ((BottomNavigationView)findViewById(R.id.main_bottom_nav)).setOnNavigationItemSelectedListener(this);
+        mBottomNavigationView = (BottomNavigationView) findViewById(R.id.main_bottom_nav);
+        mBottomNavigationView.setOnNavigationItemSelectedListener(this);
 
         mToolbar = findViewById(R.id.toolbar);
         setSupportActionBar(mToolbar);
@@ -102,7 +156,7 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
             @Override
             public void onClick(View view) {
                 Intent intent  = new Intent(MainActivity.this, SettingsActivity.class);
-                intent.putExtra(CURRENT_USER_EXTRA, mCurrentUser);
+                intent.putExtra(Constants.User.CURRENT_USER_EXTRA, mCurrentUser);
                 startActivity(intent);
             }
         });
@@ -111,24 +165,55 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
                 Intent intent;
-
                 switch (item.getItemId()) {
                     case R.id.nav_profile_settings:
                         intent = new Intent(MainActivity.this, SettingsActivity.class);
-                        intent.putExtra(CURRENT_USER_EXTRA, mCurrentUser);
+                        intent.putExtra(Constants.User.CURRENT_USER_EXTRA, mCurrentUser);
                         startActivity(intent);
                         break;
 
                     case R.id.nav_profile_helpfeed:
                         intent = new Intent(MainActivity.this, HelpFeedbackActivity.class);
-                        intent.putExtra(CURRENT_USER_EXTRA, mCurrentUser);
+                        intent.putExtra(Constants.User.CURRENT_USER_EXTRA, mCurrentUser);
                         startActivity(intent);
                         break;
                 }
                 return false;
             }
         });
+
+
         Log.d(TAG, "onCreate: ends");
+    }
+
+    public void moveFragment(Fragment source, Fragment dest, int menu) {
+        mFragmentManager.beginTransaction().hide(source).show(dest).commit();
+        mBottomNavigationView.getMenu().findItem(menu).setChecked(true);
+        mActiveFragment = dest;
+
+        if (mHomeFragment == dest)
+            mFragmentStatus = FragmentStatus.HOME_FRAGMENT;
+        else if (mMapFragment == dest)
+            mFragmentStatus = FragmentStatus.MAP_FRAGMENT;
+        else if (mPostFragment == dest)
+            mFragmentStatus = FragmentStatus.POST_FRAGMENT;
+        else if (mGroupFragment == dest)
+            mFragmentStatus = FragmentStatus.GROUP_FRAGMENT;
+
+    }
+
+    public void startProgressBar() {
+        mProgressBar.setVisibility(View.VISIBLE);
+
+        // make the main window untouchable while showing progress bar
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
+                WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+    }
+
+    public void stopProgressBar() {
+        mProgressBar.setVisibility(View.GONE);
+        // make the main window touchable after progress bar is gone
+        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
     }
 
     @Override
@@ -146,6 +231,9 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
             else if (mFragmentStatus == FragmentStatus.MAP_FRAGMENT)
                 mActiveFragment = mFragmentManager.findFragmentByTag("2");
         }
+
+        mCurrentGroups = (ArrayList<Group>) savedInstanceState.getSerializable(Constants.User.GROUP_EXTRA);
+        mCurrentUser = (UserEntity) savedInstanceState.getSerializable(Constants.User.CURRENT_USER_EXTRA);
     }
 
     @Override
@@ -154,15 +242,10 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
 
         Log.d(TAG, "onResume: mFragmentManager size:" + mFragmentManager.getFragments().size());
         if (mFragmentManager.getFragments().size() == 0) {
-            mFragmentManager.beginTransaction().add(R.id.main_frag_container, mGroupFragment, "4").hide(mGroupFragment).commit();
-            mFragmentManager.beginTransaction().add(R.id.main_frag_container, mPostFragment, "3").hide(mPostFragment).commit();
             mFragmentManager.beginTransaction().add(R.id.main_frag_container, mMapFragment, "2").hide(mMapFragment).commit();
             mFragmentManager.beginTransaction().add(R.id.main_frag_container, mHomeFragment, "1").hide(mHomeFragment).commit();
         }
         mFragmentManager.beginTransaction().show(mActiveFragment).commit();
-
-        ProcessUser processUser = new ProcessUser(this);
-        processUser.execute(mCurrentUsername);
 
         TextView following_count =(TextView) mNavigationView.getMenu().findItem(R.id.nav_profile_following).getActionView();
         following_count.setGravity(Gravity.CENTER_VERTICAL);
@@ -186,10 +269,12 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
         Log.d(TAG, "onSaveInstanceState: called");
 
         outState.putSerializable(ACTIVE_FRAGMENT_EXTRA, mFragmentStatus);
-        for(Fragment f: mFragmentManager.getFragments()) {
-            //mFragmentManager.beginTransaction().remove(f).commit();
+        outState.putSerializable(Constants.User.GROUP_EXTRA, (ArrayList<Group>) mCurrentGroups);
+        outState.putSerializable(Constants.User.CURRENT_USER_EXTRA, mCurrentUser);
+
+        for (Fragment f : mFragmentManager.getFragments())
             mFragmentManager.beginTransaction().hide(f).commit();
-        }
+
         super.onSaveInstanceState(outState);
     }
 
@@ -245,12 +330,13 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
 
     @Override
     public void onProcessUserFinished(UserEntity user) {
+        Log.d(TAG, "onProcessUserFinished: called");
         mCurrentUser = user;
+        mCountDownLatch.countDown();
         View headerView = mNavigationView.getHeaderView(0);
         CircleImageView imageView = headerView.findViewById(R.id.nav_header_profile_image);
-
         if (user.getImageUri() != null) {
-            Picasso.get().load(user.getImageUri())
+            Picasso.get().load(Constants.Network.BASE_URL + user.getImageUri())
                     .memoryPolicy(MemoryPolicy.NO_CACHE)
                     .placeholder(R.drawable.placeholder)
                     .error(R.drawable.placeholder)
@@ -280,5 +366,12 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
         Intent intent = new Intent(this, LoginActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
+    }
+
+    @Override
+    public void onGetAllGroupComplete(List<Group> groups) {
+        Log.d(TAG, "onGetAllGroupComplete: called");
+        mCurrentGroups = groups;
+        mCountDownLatch.countDown();
     }
 }

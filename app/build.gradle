@@ -20,6 +20,10 @@ android {
     packagingOptions {
         exclude 'META-INF/DEPENDENCIES'
     }
+    compileOptions {
+        sourceCompatibility = 1.8
+        targetCompatibility = 1.8
+    }
 }
 
 dependencies {
@@ -58,4 +62,10 @@ dependencies {
     implementation files('libs/reactive-streams-1.0.2.jar')
     implementation files('libs/rxjava-2.2.8.jar')
     implementation files('libs/slf4j-api-1.7.25.jar')
+    implementation 'com.github.mahimrocky:ShowMoreText:1.0.2'
+
+    implementation 'com.google.android.exoplayer:exoplayer:2.12.3'
+    implementation 'com.google.android.exoplayer:exoplayer-core:2.12.3'
+    implementation 'com.google.android.exoplayer:exoplayer-dash:2.12.3'
+    implementation 'com.google.android.exoplayer:exoplayer-ui:2.12.3'
 }

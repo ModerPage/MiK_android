@@ -1,12 +1,12 @@
 package me.modernpage.activity;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 
-public class LaunchScreen extends BaseActivity {
+import androidx.appcompat.app.AppCompatActivity;
+
+public class LaunchScreen extends AppCompatActivity {
     private static final String TAG = "LaunchScreen";
 
     @Override
@@ -19,9 +19,15 @@ public class LaunchScreen extends BaseActivity {
             public void run() {
                 try {
                     Thread.sleep(5000);
-                    Intent intent = new Intent(LaunchScreen.this,LoginActivity.class);
-                    startActivity(intent);
-                    finish();
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Intent intent = new Intent(LaunchScreen.this, LoginActivity.class);
+                            startActivity(intent);
+                            finish();
+                        }
+                    });
+
                 } catch (InterruptedException e) {
                     Log.e(TAG, "run: Launch screen error: " + e.getMessage());
                 }

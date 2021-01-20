@@ -22,10 +22,9 @@ import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+import me.modernpage.Constants;
 import me.modernpage.activity.R;
 
-import static me.modernpage.activity.BaseActivity.BASE_URL;
-import static me.modernpage.activity.BaseActivity.UPLOADIMAGE_URL;
 
 public class UploadImage extends AsyncTask<Bitmap,Void,String> {
     private static final String TAG = "UploadImage";
@@ -79,7 +78,7 @@ public class UploadImage extends AsyncTask<Bitmap,Void,String> {
             return null;
         HttpURLConnection connection = null;
         try {
-            URL url = new URL(UPLOADIMAGE_URL);
+            URL url = new URL(Constants.Network.UPLOADIMAGE_URL);
             connection =(HttpURLConnection)url.openConnection();
             connection.setRequestMethod("POST");
             connection.setReadTimeout(10000);

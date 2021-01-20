@@ -52,6 +52,7 @@
         android:gravity="top|left"
         android:hint="@string/post_content_hint"
         android:inputType="textMultiLine|textPersonName"
+        android:maxLength="200"
         android:scrollbars="vertical"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="@+id/post_avatar"

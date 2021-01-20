@@ -4,26 +4,15 @@ package me.modernpage.fragment.post;
 import android.Manifest;
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.content.ContentValues;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
-import android.content.pm.PackageManager;
-import android.content.res.Configuration;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.drawable.BitmapDrawable;
 import android.location.Address;
 import android.net.Uri;
 import android.os.Bundle;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.core.content.FileProvider;
-import androidx.fragment.app.Fragment;
-
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
@@ -40,19 +29,23 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.content.FileProvider;
+import androidx.fragment.app.Fragment;
+
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.squareup.picasso.MemoryPolicy;
 import com.squareup.picasso.Picasso;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.security.Permission;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import me.modernpage.Constants;
 import me.modernpage.PermissionUtils;
-import me.modernpage.activity.BaseActivity;
 import me.modernpage.activity.GoogleMapActivity;
 import me.modernpage.activity.MainActivity;
 import me.modernpage.activity.R;
@@ -60,18 +53,15 @@ import me.modernpage.entity.Group;
 import me.modernpage.entity.Location;
 import me.modernpage.entity.Post;
 import me.modernpage.entity.UserEntity;
-import me.modernpage.task.GetAllGroup;
 import me.modernpage.task.ProcessPost;
-import me.modernpage.task.ProcessUser;
 
 import static android.app.Activity.RESULT_CANCELED;
 import static android.app.Activity.RESULT_OK;
-import static me.modernpage.activity.BaseActivity.USERNAME_EXTRA;
 
 /**
  * A simple {@link Fragment} subclass.
  */
-public class PostFragment extends Fragment implements GetAllGroup.OnGetAllGroup, ProcessUser.OnProcessUser {
+public class PostFragment extends Fragment implements ProcessPost.OnProcessPost {
     private static final String TAG = "PostFragment";
 
     private static final int CAMERA_PERMISSION_REQUEST_CODE = 10;
@@ -84,7 +74,7 @@ public class PostFragment extends Fragment implements GetAllGroup.OnGetAllGroup,
     private static final int ERROR_DIALOG_REQUEST = 9001;
     private static final int ADD_LOCATION_REQUEST = 4;
 
-    private static final String LOADED_IMAGE_EXTRA = "loaded_bitma";
+    private static final String LOADED_IMAGE_EXTRA = "loaded_bitmap";
     private static final String LOADED_VIDEO_EXTRA = "loaded_video";
     private static final String LOADED_ADDRESS_EXTRA = "loaded_address";
     private static final String IS_FILE_EXIST_EXTRA = "is_file_exist";
@@ -110,6 +100,13 @@ public class PostFragment extends Fragment implements GetAllGroup.OnGetAllGroup,
 //     this boolean is to ensure that user can upload only one file
     private boolean mIsFileExist = false;
 
+    private OnAddedNewPost mCallback;
+
+    public interface OnAddedNewPost {
+        void onAddedNewPost(Post post);
+
+    }
+
     public PostFragment() {
         // Required empty public constructor
     }
@@ -126,15 +123,31 @@ public class PostFragment extends Fragment implements GetAllGroup.OnGetAllGroup,
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         Log.d(TAG, "onViewCreated: starts");
 
-        // calling background tasks
-        final GetAllGroup getAllGroup = new GetAllGroup(getContext(), this);
-        getAllGroup.execute();
+        mCallback = (OnAddedNewPost) getActivity().getSupportFragmentManager().findFragmentByTag("1");
+        mSpinner = view.findViewById(R.id.post_group_list);
+        mAvatar = view.findViewById(R.id.post_avatar);
+        mFullname = view.findViewById(R.id.post_fullname);
+        mPostFileContainer = view.findViewById(R.id.file_container);
+        mPostLocation = view.findViewById(R.id.post_location);
+        Button postButton = view.findViewById(R.id.post_post);
 
         if (getArguments() != null) {
             Log.d(TAG, "onViewCreated: getArguments() not null");
-            String username = getArguments().getString(USERNAME_EXTRA);
-            ProcessUser processUser = new ProcessUser(this);
-            processUser.execute(username);
+
+            mCurrentUser = (UserEntity) getArguments().getSerializable(Constants.User.CURRENT_USER_EXTRA);
+            mGroups = (ArrayList<Group>) getArguments().getSerializable(Constants.User.GROUP_EXTRA);
+
+            ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(), R.layout.spinner_item, prepareGroupList(mGroups));
+            adapter.setDropDownViewResource(R.layout.simple_spinner_dropdown_item);
+            mSpinner.setAdapter(adapter);
+            mSpinner.setSelection(mGroupIndex);
+            Log.d(TAG, "onViewCreated: imageUri: " + mCurrentUser.getImageUri());
+            mFullname.setText(mCurrentUser.getFullname());
+            Picasso.get().load(Constants.Network.BASE_URL + mCurrentUser.getImageUri())
+                    .memoryPolicy(MemoryPolicy.NO_CACHE)
+                    .placeholder(R.drawable.placeholder)
+                    .error(R.drawable.placeholder)
+                    .into(mAvatar);
         }
 
         if (savedInstanceState != null) {
@@ -152,12 +165,6 @@ public class PostFragment extends Fragment implements GetAllGroup.OnGetAllGroup,
             Log.d(TAG, "onViewCreated: mLoadedAddress: " + mLoadedAddress);
         }
 
-        mSpinner = view.findViewById(R.id.post_group_list);
-        mAvatar = view.findViewById(R.id.post_avatar);
-        mFullname = view.findViewById(R.id.post_fullname);
-        mPostFileContainer = view.findViewById(R.id.file_container);
-        mPostLocation = view.findViewById(R.id.post_location);
-        Button postButton = view.findViewById(R.id.post_post);
 
         postButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -190,7 +197,7 @@ public class PostFragment extends Fragment implements GetAllGroup.OnGetAllGroup,
                             mLoadedAddress.getLocality(), mLoadedAddress.getCountryName());
 
                 Post post = new Post(mCurrentUser, post_location, post_group, post_content, post_file_path);
-                ProcessPost processPost = new ProcessPost();
+                ProcessPost processPost = new ProcessPost(getContext(), PostFragment.this);
                 processPost.execute(post);
             }
         });
@@ -216,6 +223,7 @@ public class PostFragment extends Fragment implements GetAllGroup.OnGetAllGroup,
 
             }
         });
+
 
         mImageLayout.getCloseButton().setOnClickListener(new View.OnClickListener() {
             @Override
@@ -372,7 +380,7 @@ public class PostFragment extends Fragment implements GetAllGroup.OnGetAllGroup,
 
     private void initGoogleMap() {
         Intent intent = new Intent(getActivity(), GoogleMapActivity.class);
-        startActivityForResult(intent, ADD_LOCATION_REQUEST);
+        getActivity().startActivityForResult(intent, ADD_LOCATION_REQUEST);
     }
 
     @Override
@@ -383,7 +391,6 @@ public class PostFragment extends Fragment implements GetAllGroup.OnGetAllGroup,
             final int unmaskedRequestCode = requestCode & 0x0000ffff;
             Log.d(TAG, "onActivityResult: unmaskedRequestCode: " + unmaskedRequestCode);
 
-
             switch (unmaskedRequestCode) {
                 case ADD_LOCATION_REQUEST:
                     if (resultCode == RESULT_OK && data != null) {
@@ -391,12 +398,14 @@ public class PostFragment extends Fragment implements GetAllGroup.OnGetAllGroup,
                         Log.d(TAG, "onActivityResult: ADD_LOCATION_REQUEST: " + mLoadedAddress);
                     }
                     break;
+
                 case TAKEPHOTO_REQUEST:
                     if(resultCode == RESULT_OK && data != null) {
                         mIsFileExist = true;
                         Log.d(TAG, "onActivityResult: TAKEPHOTO_REQUEST");
                     }
                     break;
+
                 case GALLERY_IMAGE_REQUEST:
                     if (resultCode == RESULT_OK && data != null) {
                         mIsFileExist = true;
@@ -416,6 +425,7 @@ public class PostFragment extends Fragment implements GetAllGroup.OnGetAllGroup,
                         }
                     }
                     break;
+
                 case TAKEVIDEO_REQUEST:
                     if(resultCode == RESULT_OK && data != null) {
                         mIsFileExist = true;
@@ -425,6 +435,7 @@ public class PostFragment extends Fragment implements GetAllGroup.OnGetAllGroup,
                         mLoadedVideoPath = uri.getPath();
                     }
                     break;
+
                 case GALLERY_VIDEO_REQUEST:
                     if (resultCode == RESULT_OK && data != null) {
                         mIsFileExist = true;
@@ -502,15 +513,6 @@ public class PostFragment extends Fragment implements GetAllGroup.OnGetAllGroup,
         super.onPause();
     }
 
-    @Override
-    public void onGetAllGroupComplete(final List<Group> groups) {
-        Log.d(TAG, "onGetAllGroupComplete: called");
-        mGroups = groups;
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(),R.layout.spinner_item,prepareGroupList(groups));
-        adapter.setDropDownViewResource(R.layout.simple_spinner_dropdown_item);
-        mSpinner.setAdapter(adapter);
-        mSpinner.setSelection(mGroupIndex);
-    }
 
     private String[] prepareGroupList(List<Group> groups) {
         String[] list = new String[groups.size()];
@@ -520,24 +522,13 @@ public class PostFragment extends Fragment implements GetAllGroup.OnGetAllGroup,
         return list;
     }
 
-    public static PostFragment newInstance(String username) {
+    public static PostFragment newInstance(UserEntity currentUser, List<Group> currentGroups) {
         PostFragment fragment = new PostFragment();
         Bundle bundle = new Bundle();
-        bundle.putString(USERNAME_EXTRA, username);
+        bundle.putSerializable(Constants.User.CURRENT_USER_EXTRA, currentUser);
+        bundle.putSerializable(Constants.User.GROUP_EXTRA, (ArrayList<Group>) currentGroups);
         fragment.setArguments(bundle);
         return fragment;
-    }
-
-    @Override
-    public void onProcessUserFinished(UserEntity user) {
-        Log.d(TAG, "onProcessUserFinished: starts");
-        mCurrentUser = user;
-        mFullname.setText(user.getFullname());
-        Picasso.get().load(user.getImageUri())
-                .memoryPolicy(MemoryPolicy.NO_CACHE)
-                .placeholder(R.drawable.placeholder)
-                .error(R.drawable.placeholder)
-                .into(mAvatar);
     }
 
     private boolean isGoogleServiceOK() {
@@ -556,6 +547,28 @@ public class PostFragment extends Fragment implements GetAllGroup.OnGetAllGroup,
         }
         
         return false;
+    }
+
+    @Override
+    public void onProcessPostComplete(Post post) {
+        Log.d(TAG, "onProcessPostComplete: post: " + post);
+        if (post != null) {
+            // reset and go to home page
+            // post is created
+            post.setPostOwner(mCurrentUser);
+            post.setPostGroup(mGroups.get(mGroupIndex < 0 ? 0 : mGroupIndex));
+            Fragment homeFragment = getActivity().getSupportFragmentManager().findFragmentByTag("1");
+            ((MainActivity) getActivity()).moveFragment(this, homeFragment, R.id.nav_home);
+            mCallback.onAddedNewPost(post);
+
+        } else {
+            Toast.makeText(getContext(), "Error occurs while procession the post", Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void reset() {
+        mGroupIndex = -1;
+        mSpinnerInitial = true;
     }
 
 }

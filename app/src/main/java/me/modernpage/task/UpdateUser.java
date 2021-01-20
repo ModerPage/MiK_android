@@ -20,11 +20,10 @@ import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+import me.modernpage.Constants;
 import me.modernpage.activity.R;
 import me.modernpage.entity.UserEntity;
 
-import static me.modernpage.activity.BaseActivity.BASE_URL;
-import static me.modernpage.activity.BaseActivity.UPDATEUSER_URL;
 
 public class UpdateUser extends AsyncTask<UserEntity, Void, String> {
     private static final String TAG = "UpdateUser";
@@ -49,7 +48,7 @@ public class UpdateUser extends AsyncTask<UserEntity, Void, String> {
 
         HttpURLConnection connection;
         try {
-            URL url = new URL(UPDATEUSER_URL);
+            URL url = new URL(Constants.Network.UPDATEUSER_URL);
             connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("POST");
             connection.setReadTimeout(10000);

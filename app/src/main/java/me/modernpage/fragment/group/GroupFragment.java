@@ -2,34 +2,35 @@ package me.modernpage.fragment.group;
 
 
 import android.os.Bundle;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.viewpager.widget.ViewPager;
 
-import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-
 import com.google.android.material.tabs.TabLayout;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import me.modernpage.Constants;
 import me.modernpage.activity.R;
 import me.modernpage.entity.Group;
-import me.modernpage.task.GetAllGroup;
 
 
 /**
  * A simple {@link Fragment} subclass.
  */
-public class GroupFragment extends Fragment implements GetAllGroup.OnGetAllGroup {
+public class GroupFragment extends Fragment {
     private static final String TAG = "GroupFragment";
     private ViewPager mViewPager;
     private TabLayout mTabLayout;
-
+    private List<Group> mGroups;
+    private GroupPagerAdapter mPagerAdapter;
     public GroupFragment() {
         // Required empty public constructor
     }
@@ -48,18 +49,24 @@ public class GroupFragment extends Fragment implements GetAllGroup.OnGetAllGroup
         Log.d(TAG, "onViewCreated: starts");
         mViewPager = view.findViewById(R.id.group_pager);
         mTabLayout = view.findViewById(R.id.group_tab);
-        GetAllGroup getAllGroup = new GetAllGroup(getContext(), this);
-        getAllGroup.execute();
+
+        if (null != getArguments()) {
+            mGroups = (ArrayList<Group>) getArguments().getSerializable(Constants.User.GROUP_EXTRA);
+            mPagerAdapter = new GroupPagerAdapter(getChildFragmentManager(), mGroups);
+            mViewPager.setAdapter(mPagerAdapter);
+            mTabLayout.setupWithViewPager(mViewPager);
+        }
         Log.d(TAG, "onViewCreated: ends");
     }
 
-    @Override
-    public void onGetAllGroupComplete(List<Group> groups) {
-        GroupPagerAdapter pagerAdapter = new GroupPagerAdapter(getParentFragmentManager(), groups);
-        mViewPager.setAdapter(pagerAdapter);
-        mTabLayout.setupWithViewPager(mViewPager);
-    }
 
+    public static Fragment newInstance(List<Group> currentGroups) {
+        GroupFragment fragment = new GroupFragment();
+        Bundle bundle = new Bundle();
+        bundle.putSerializable(Constants.User.GROUP_EXTRA, (ArrayList<Group>) currentGroups);
+        fragment.setArguments(bundle);
+        return fragment;
+    }
 }
 
 

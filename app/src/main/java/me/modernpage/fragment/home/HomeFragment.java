@@ -12,7 +12,10 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
+
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.RequestManager;
+import com.bumptech.glide.request.RequestOptions;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,8 +32,8 @@ import me.modernpage.task.GetPosts;
 public class HomeFragment extends Fragment implements PostFragment.OnAddedNewPost, GetPosts.OnGetPosts {
     private static final String TAG = "HomeFragment";
     private static final int PAGE_SIZE = 5;
-    private RecyclerView mRecyclerView;
-    private HomePostRecViewAdapter mRecViewAdapter;
+    private HomeRecyclerView mRecyclerView;
+    private HomeRecyclerViewAdapter mRecViewAdapter;
     private List<Post> mPosts;
 
     public HomeFragment() {
@@ -55,16 +58,25 @@ public class HomeFragment extends Fragment implements PostFragment.OnAddedNewPos
         mRecyclerView = view.findViewById(R.id.home_post_list);
         LinearLayoutManager layoutManager = new LinearLayoutManager(getContext());
         mRecyclerView.setLayoutManager(layoutManager);
-        mRecViewAdapter = new HomePostRecViewAdapter(getContext(), mPosts);
+        mRecViewAdapter = new HomeRecyclerViewAdapter(mPosts, initGlide());
         mRecyclerView.setAdapter(mRecViewAdapter);
-        SpaceItemDecoration mSpaceItemDecoration = new SpaceItemDecoration(8);
+        SpaceItemDecoration mSpaceItemDecoration = new SpaceItemDecoration(12);
         mRecyclerView.addItemDecoration(mSpaceItemDecoration);
+    }
+
+    private RequestManager initGlide() {
+        RequestOptions options = new RequestOptions()
+                .placeholder(R.drawable.white_background)
+                .error(R.drawable.white_background);
+
+        return Glide.with(this)
+                .setDefaultRequestOptions(options);
     }
 
     @Override
     public void onAddedNewPost(Post post) {
         mPosts.add(post);
-        mRecViewAdapter.loadNewPost(mPosts);
+        mRecViewAdapter.loadNewPosts(mPosts);
     }
 
     private String createUri(int start) {
@@ -78,6 +90,15 @@ public class HomeFragment extends Fragment implements PostFragment.OnAddedNewPos
 
     @Override
     public void onGetPostsComplete(List<Post> posts) {
-        mRecViewAdapter.loadNewPost(posts);
+        mRecViewAdapter.loadNewPosts(posts);
+        mRecyclerView.setPosts(posts);
+    }
+
+    @Override
+    public void onDestroy() {
+        if (mRecyclerView != null) {
+            mRecyclerView.releasePlayer();
+        }
+        super.onDestroy();
     }
 }

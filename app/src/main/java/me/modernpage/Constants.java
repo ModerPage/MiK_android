@@ -31,7 +31,7 @@ public class Constants {
     }
 
     public static class Network {
-        private static final String IP_ADDRESS = "http://192.168.100.13";
+        private static final String IP_ADDRESS = "http://192.168.1.108";
         public static final String BASE_URL = IP_ADDRESS + ":8080/MakeItKnown";
         public static final String UPDATEUSER_URL = BASE_URL + "/user/updateUser";
         public static final String UPLOADIMAGE_URL = BASE_URL + "/image/uploadImage";

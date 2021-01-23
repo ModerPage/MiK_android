@@ -44,8 +44,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import me.modernpage.Constants;
-import me.modernpage.PermissionUtils;
+import me.modernpage.util.Constants;
+import me.modernpage.util.PermissionUtils;
 import me.modernpage.activity.GoogleMapActivity;
 import me.modernpage.activity.MainActivity;
 import me.modernpage.activity.R;
@@ -83,6 +83,7 @@ public class PostFragment extends Fragment implements ProcessPost.OnProcessPost 
     private Spinner mSpinner;
     private ImageView mAvatar;
     private TextView mFullname;
+    private EditText mContent;
     private TextView mPostLocation;
 
     private LinearLayout mPostFileContainer;
@@ -141,8 +142,8 @@ public class PostFragment extends Fragment implements ProcessPost.OnProcessPost 
             adapter.setDropDownViewResource(R.layout.simple_spinner_dropdown_item);
             mSpinner.setAdapter(adapter);
             mSpinner.setSelection(mGroupIndex);
-            Log.d(TAG, "onViewCreated: imageUri: " + mCurrentUser.getImageUri());
             mFullname.setText(mCurrentUser.getFullname());
+
             Picasso.get().load(Constants.Network.BASE_URL + mCurrentUser.getImageUri())
                     .memoryPolicy(MemoryPolicy.NO_CACHE)
                     .placeholder(R.drawable.placeholder)
@@ -169,14 +170,14 @@ public class PostFragment extends Fragment implements ProcessPost.OnProcessPost 
         postButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                EditText editText = getView().findViewById(R.id.post_content);
-                String post_content = editText.getText().toString().trim();
+                mContent = getView().findViewById(R.id.post_content);
+                String post_content = mContent.getText().toString().trim();
                 String post_file_path = null;
                 Location post_location = null;
                 Group post_group = mGroups.get(mGroupIndex < 0 ? 0 : mGroupIndex);
 
                 if (post_content.length() == 0) {
-                    editText.setError("Post text can't be empty");
+                    mContent.setError("Post text can't be empty");
                     return;
                 }
 
@@ -370,11 +371,9 @@ public class PostFragment extends Fragment implements ProcessPost.OnProcessPost 
 
     private Uri setImageUri() {
         File imagePath = new File(Environment.getExternalStorageDirectory(), "DCIM");
-        Log.d(TAG, "setImageUri: imagePath: " + imagePath);
         File imageFile = new File(imagePath, "captured_post_image" + new Date().getTime() + ".jpg");
         Uri imageUri = FileProvider.getUriForFile(getContext(), "me.modernpage.makeitknown.provider", imageFile);
         this.mLoadedImagePath = imageFile.getAbsolutePath();
-        Log.d(TAG, "setImageUri: imageAbsolutePath: " + mLoadedImagePath);
         return imageUri;
     }
 
@@ -400,10 +399,8 @@ public class PostFragment extends Fragment implements ProcessPost.OnProcessPost 
                     break;
 
                 case TAKEPHOTO_REQUEST:
-                    if(resultCode == RESULT_OK && data != null) {
+                    if (resultCode == RESULT_OK)
                         mIsFileExist = true;
-                        Log.d(TAG, "onActivityResult: TAKEPHOTO_REQUEST");
-                    }
                     break;
 
                 case GALLERY_IMAGE_REQUEST:
@@ -482,6 +479,8 @@ public class PostFragment extends Fragment implements ProcessPost.OnProcessPost 
         Log.d(TAG, "onResume: called");
 
         if (mIsFileExist && mPostFileContainer.getChildCount() == 0) {
+            Log.d(TAG, "onResume: mLoadedImagePath: " + mLoadedImagePath);
+            Log.d(TAG, "onResume: mLodadedVideoPath: " + mLoadedVideoPath);
             if (mLoadedImagePath != null) {
                 Bitmap bitmap = BitmapFactory.decodeFile(mLoadedImagePath);
                 bitmap = Bitmap.createScaledBitmap(bitmap,
@@ -513,13 +512,13 @@ public class PostFragment extends Fragment implements ProcessPost.OnProcessPost 
         super.onPause();
     }
 
-
     private String[] prepareGroupList(List<Group> groups) {
-        String[] list = new String[groups.size()];
+        List<String> arrayList = new ArrayList<>();
         for(int i=0, length=groups.size(); i<length; i++) {
-            list[i] = groups.get(i).getGroupName();
+            if (!"private".equals(groups.get(i).getGroupType().getGroupTypeName()))
+                arrayList.add(groups.get(i).getGroupName());
         }
-        return list;
+        return arrayList.toArray(new String[arrayList.size()]);
     }
 
     public static PostFragment newInstance(UserEntity currentUser, List<Group> currentGroups) {
@@ -560,15 +559,23 @@ public class PostFragment extends Fragment implements ProcessPost.OnProcessPost 
             Fragment homeFragment = getActivity().getSupportFragmentManager().findFragmentByTag("1");
             ((MainActivity) getActivity()).moveFragment(this, homeFragment, R.id.nav_home);
             mCallback.onAddedNewPost(post);
-
+            reset();
         } else {
             Toast.makeText(getContext(), "Error occurs while procession the post", Toast.LENGTH_LONG).show();
         }
     }
 
     private void reset() {
+        mPostFileContainer.removeAllViews();
+        mIsFileExist = false;
+        mLoadedVideoPath = null;
+        mLoadedImagePath = null;
+        mPostLocation.setText("");
+        mLoadedAddress = null;
+        mSpinner.setSelection(0);
         mGroupIndex = -1;
         mSpinnerInitial = true;
-    }
+        mContent.getText().clear();
 
+    }
 }

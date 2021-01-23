@@ -14,7 +14,7 @@ import com.squareup.picasso.Picasso;
 import java.util.ArrayList;
 import java.util.List;
 
-import me.modernpage.Constants;
+import me.modernpage.util.Constants;
 import me.modernpage.activity.R;
 import me.modernpage.entity.Group;
 

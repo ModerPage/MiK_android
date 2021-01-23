@@ -8,7 +8,7 @@ import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-import me.modernpage.Constants;
+import me.modernpage.util.Constants;
 import me.modernpage.entity.UserEntity;
 
 

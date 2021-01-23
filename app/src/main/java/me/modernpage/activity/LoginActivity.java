@@ -15,7 +15,7 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 
-import me.modernpage.Constants;
+import me.modernpage.util.Constants;
 import me.modernpage.task.ProcessLogin;
 
 

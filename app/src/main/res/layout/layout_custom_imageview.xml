@@ -12,7 +12,7 @@
         android:layout_gravity="bottom|left"
         android:layout_marginTop="12dp"
         android:layout_marginEnd="12dp"
-        android:scaleType="fitCenter"
+        android:scaleType="centerInside"
         android:background="@drawable/round_outline"
         app:srcCompat="@drawable/placeholder" />
 

@@ -32,7 +32,7 @@ import com.google.android.exoplayer2.util.Util;
 import java.util.ArrayList;
 import java.util.List;
 
-import me.modernpage.Constants;
+import me.modernpage.util.Constants;
 import me.modernpage.activity.R;
 import me.modernpage.entity.Post;
 
@@ -62,7 +62,6 @@ public class HomeRecyclerView extends RecyclerView {
 
     private VolumeState mVolumeState;
     private PlayState mPlayState;
-    private HomeRecyclerViewHolder.FileType mFileType;
 
     public HomeRecyclerView(@NonNull Context context) {
         super(context);
@@ -156,10 +155,11 @@ public class HomeRecyclerView extends RecyclerView {
 
                         if (!mIsVideoViewAdded) {
                             // adding video view to list item
-                            if (mFileType == HomeRecyclerViewHolder.FileType.VIDEO) {
-                                addVideoView();
-//                                setPlayControl(mPlayState);
-                            }
+                            // if (mFileType == HomeRecyclerViewHolder.FileType.VIDEO) {
+                            addVideoView();
+                            if (mPlayState == PlayState.PLAY)
+                                mVideoPlayer.play();
+                            //  }
                         }
                         break;
                     default:
@@ -214,21 +214,21 @@ public class HomeRecyclerView extends RecyclerView {
             return;
 
         HomeRecyclerViewHolder holder = (HomeRecyclerViewHolder) child.getTag();
+        if (holder instanceof HomeRecyclerViewHolderVideo) {
 
-        mThumbnail = holder.mThumbnail;
-        mProgressBar = holder.mProgressBar;
-        mVolumeControl = holder.mVolumeControl;
-        mPlayControl = holder.mPlayControl;
-        mFileContainer = holder.itemView.findViewById(R.id.userpost_filecontainer);
-        mViewHolderParent = holder.itemView;
-        mRequestManager = holder.mRequestManager;
-        mFileType = holder.mFileType;
+            HomeRecyclerViewHolderVideo viewHolderVideo = (HomeRecyclerViewHolderVideo) holder;
+            mThumbnail = viewHolderVideo.mThumbnail;
+            mProgressBar = viewHolderVideo.mProgressBar;
+            mVolumeControl = viewHolderVideo.mVolumeControl;
+            mPlayControl = viewHolderVideo.mPlayControl;
+            mFileContainer = viewHolderVideo.itemView.findViewById(R.id.userpost_filecontainer);
+            mViewHolderParent = viewHolderVideo.itemView;
+            mRequestManager = viewHolderVideo.mRequestManager;
 
-        mVideoSurfaceView.setPlayer(mVideoPlayer);
-        mViewHolderParent.setOnClickListener(mVideoViewOnClickListener);
-        mVolumeControl.setOnClickListener(mVolumeControlOnClickListener);
+            mVideoSurfaceView.setPlayer(mVideoPlayer);
+            mFileContainer.setOnClickListener(mVideoViewOnClickListener);
+            mVolumeControl.setOnClickListener(mVolumeControlOnClickListener);
 
-        if (mFileType == HomeRecyclerViewHolder.FileType.VIDEO) {
             DataSource.Factory dataSourceFactory = new DefaultDataSourceFactory(
                     mContext, Util.getUserAgent(mContext, "RecyclerView VideoPlayer"));
             String mediaUrl = mPosts.get(targetPosition).getFileURL();
@@ -237,9 +237,9 @@ public class HomeRecyclerView extends RecyclerView {
                         .createMediaSource(MediaItem.fromUri(Constants.Network.BASE_URL + mediaUrl));
                 mVideoPlayer.setMediaSource(videoSource);
                 mVideoPlayer.prepare();
-                //mVideoPlayer.setPlayWhenReady(true);
             }
         }
+
     }
 
     private int getVisibleVideoSurfaceHeight(int playPosition) {
@@ -324,13 +324,13 @@ public class HomeRecyclerView extends RecyclerView {
     private void animatePlayControl() {
         if (mPlayControl != null) {
             mPlayControl.bringToFront();
-            if (mPlayState == PlayState.PAUSE) {
-                mRequestManager.load(R.drawable.ic_pause_grey_24dp)
-                        .into(mPlayControl);
-            } else if (mPlayState == PlayState.PLAY) {
-                mRequestManager.load(R.drawable.ic_play_arrow_grey_24dp)
-                        .into(mPlayControl);
-            }
+
+            if (mPlayState == PlayState.PAUSE)
+                mPlayControl.setImageResource(R.drawable.ic_pause_grey_24dp);
+
+            else if (mPlayState == PlayState.PLAY)
+                mPlayControl.setImageResource(R.drawable.ic_play_arrow_grey_24dp);
+
             mPlayControl.animate().cancel();
             mPlayControl.setAlpha(1f);
 
@@ -365,27 +365,21 @@ public class HomeRecyclerView extends RecyclerView {
     private void setVolumeControl(VolumeState state) {
         Log.d(TAG, "setVolumeControl: state: " + state);
         mVolumeState = state;
-        if (state == VolumeState.OFF) {
+        if (state == VolumeState.OFF)
             mVideoPlayer.setVolume(0f);
-//            showVolumeControl();
-
-        } else if (state == VolumeState.ON) {
+        else if (state == VolumeState.ON)
             mVideoPlayer.setVolume(1f);
-//            showVolumeControl();
-        }
+
         showVolumeControl();
     }
 
     private void showVolumeControl() {
         if (mVolumeControl != null) {
             mVolumeControl.bringToFront();
-            if (mVolumeState == VolumeState.OFF) {
-                mRequestManager.load(R.drawable.ic_volume_off_grey_24dp)
-                        .into(mVolumeControl);
-            } else if (mVolumeState == VolumeState.ON) {
-                mRequestManager.load(R.drawable.ic_volume_up_grey_24dp)
-                        .into(mVolumeControl);
-            }
+            if (mVolumeState == VolumeState.OFF)
+                mVolumeControl.setImageResource(R.drawable.ic_volume_off_grey_24dp);
+            else if (mVolumeState == VolumeState.ON)
+                mVolumeControl.setImageResource(R.drawable.ic_volume_up_grey_24dp);
 
             mVolumeControl.setVisibility(VISIBLE);
         }
@@ -399,7 +393,15 @@ public class HomeRecyclerView extends RecyclerView {
         mViewHolderParent = null;
     }
 
-    public void setPosts(List<Post> posts) {
-        mPosts = posts;
+    public List<Post> getPosts() {
+        return mPosts;
+    }
+
+    public void stopPlaying() {
+        if (mVideoPlayer != null && mIsVideoViewAdded) {
+            if (mVideoPlayer.isPlaying()) {
+                setPlayControl(PlayState.PAUSE);
+            }
+        }
     }
 }

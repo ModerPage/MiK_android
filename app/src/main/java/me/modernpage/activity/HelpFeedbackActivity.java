@@ -8,10 +8,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
 
-import java.net.URI;
-import java.net.URL;
-
-import me.modernpage.Constants;
+import me.modernpage.util.Constants;
 import me.modernpage.entity.UserEntity;
 
 public class HelpFeedbackActivity extends AppCompatActivity {

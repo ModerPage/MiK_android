@@ -11,16 +11,14 @@ import android.widget.ProgressBar;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.ConstraintSet;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.ObjectOutputStream;
 import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-import me.modernpage.Constants;
+import me.modernpage.util.Constants;
 import me.modernpage.activity.R;
 import me.modernpage.entity.UserEntity;
 

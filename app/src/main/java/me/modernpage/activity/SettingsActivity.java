@@ -29,7 +29,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
-import me.modernpage.Constants;
+import me.modernpage.util.Constants;
 import me.modernpage.entity.UserEntity;
 import me.modernpage.fragment.DatePickerFragment;
 import me.modernpage.task.UpdateUser;

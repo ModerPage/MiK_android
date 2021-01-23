@@ -1,4 +1,4 @@
-package me.modernpage;
+package me.modernpage.util;
 
 import android.app.Activity;
 import android.content.Intent;

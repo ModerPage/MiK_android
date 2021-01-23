@@ -27,7 +27,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
-import me.modernpage.Constants;
+import me.modernpage.util.Constants;
 import me.modernpage.activity.MainActivity;
 import me.modernpage.entity.Location;
 import me.modernpage.entity.Post;

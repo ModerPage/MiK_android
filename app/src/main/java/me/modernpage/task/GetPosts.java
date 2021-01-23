@@ -20,7 +20,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
-import me.modernpage.Constants;
+import me.modernpage.util.Constants;
 import me.modernpage.entity.Comment;
 import me.modernpage.entity.Group;
 import me.modernpage.entity.GroupType;

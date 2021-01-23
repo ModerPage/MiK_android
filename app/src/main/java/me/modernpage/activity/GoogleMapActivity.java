@@ -41,8 +41,8 @@ import com.seatgeek.placesautocomplete.model.PlaceDetails;
 
 import java.util.Locale;
 
-import me.modernpage.Constants;
-import me.modernpage.PermissionUtils;
+import me.modernpage.util.Constants;
+import me.modernpage.util.PermissionUtils;
 import me.modernpage.task.GeocodeAddressService;
 
 public class GoogleMapActivity extends AppCompatActivity implements OnMapReadyCallback, ActivityCompat.OnRequestPermissionsResultCallback {
@@ -59,8 +59,8 @@ public class GoogleMapActivity extends AppCompatActivity implements OnMapReadyCa
     private ImageView mMyLocation;
     private ProgressBar mProgressBar;
     private FloatingActionButton mSubmit;
-
     private Address mLastAddress;
+//    private LocationCallback mLocationCallback;
 
 
     @Override
@@ -90,6 +90,28 @@ public class GoogleMapActivity extends AppCompatActivity implements OnMapReadyCa
 
     private void init() {
         Log.d(TAG, "init: initializing map");
+        //mLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
+//        mLocationCallback = new LocationCallback() {
+//            @Override
+//            public void onLocationResult(LocationResult locationResult) {
+//                Log.d(TAG, "onLocationResult: called");
+//                if(locationResult == null)
+//                    return;
+//                Log.d(TAG, "onLocationResult: locationResult: " + locationResult.getLocations());
+//                for(Location location: locationResult.getLocations()) {
+//                    if(location != null) {
+//                        Log.d(TAG, "onLocationResult: location: " + location);
+//                        // move camera to the current location;
+//                        mSearchText.setCurrentLocation(location);
+//                        moveCamera(new LatLng(location.getLatitude(), location.getLongitude()), DEFAULT_ZOOM, null);
+//                        stopLocationUpdate(mLocationCallback);
+//                        break;
+//                    }
+//                }
+//            }
+//        };
+//        startLocationUpdate(mLocationCallback);
+
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
@@ -314,6 +336,7 @@ public class GoogleMapActivity extends AppCompatActivity implements OnMapReadyCa
             if (mLastAddress != null) {
                 moveCamera(new LatLng(mLastAddress.getLatitude(), mLastAddress.getLongitude()), DEFAULT_ZOOM, mLastAddress.getAddressLine(0));
             } else {
+                Log.d(TAG, "onMapReady: called to get deviceLocation");
                 getDeviceLocation();
             }
             // add small blue dot on current location of device , centers it on the phone screen
@@ -334,10 +357,12 @@ public class GoogleMapActivity extends AppCompatActivity implements OnMapReadyCa
                         if (task.isSuccessful()) {
                             Log.d(TAG, "onComplete: got current device location successfully");
                             Location currentLocation = (Location) task.getResult();
-                            // move camera to the current location;
-                            mSearchText.setCurrentLocation(currentLocation);
-                            Log.d(TAG, "onComplete: getDeviceLocation: " + currentLocation.toString());
-                            moveCamera(new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude()), DEFAULT_ZOOM, null);
+                            Log.d(TAG, "onComplete: currentLocation: " + currentLocation);
+                            if (currentLocation != null) {
+                                // move camera to the current location;
+                                mSearchText.setCurrentLocation(currentLocation);
+                                moveCamera(new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude()), DEFAULT_ZOOM, null);
+                            }
                         } else {
                             Log.d(TAG, "onComplete: not found current location");
                             Toast.makeText(GoogleMapActivity.this, "unable to get current location", Toast.LENGTH_LONG).show();
@@ -349,6 +374,55 @@ public class GoogleMapActivity extends AppCompatActivity implements OnMapReadyCa
             Log.e(TAG, "getDeviceLocation: SecurityException: " + e);
         }
     }
+
+//    private void getDeviceLocation() {
+//        Log.d(TAG, "getDeviceLocation: getting current device location");
+////        mLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
+//        try {
+//            if (!permissionDenied) {
+//                mLocationProviderClient.getLastLocation().addOnSuccessListener(new OnSuccessListener<Location>() {
+//                    @Override
+//                    public void onSuccess(Location location) {
+//                        Log.d(TAG, "onComplete: got current device location successfully");
+//                        Log.d(TAG, "onComplete: currentLocation: " + location);
+//                        if(location != null) {
+//                            // move camera to the current location;
+//                            mSearchText.setCurrentLocation(location);
+////                            Log.d(TAG, "onComplete: getDeviceLocation: " + currentLocation.toString());
+//                            moveCamera(new LatLng(location.getLatitude(), location.getLongitude()), DEFAULT_ZOOM, null);
+//                        } else {
+//                            startLocationUpdate(mLocationCallback);
+//                        }
+//                    }
+//                });
+////                final Task location = mLocationProviderClient.getLastLocation();
+////                location.addOnCompleteListener(new OnCompleteListener() {
+////                    @Override
+////                    public void onComplete(@NonNull Task task) {
+////                        if (task.isSuccessful()) {
+////                            Log.d(TAG, "onComplete: got current device location successfully");
+////                            Location currentLocation = (Location) task.getResult();
+////                            Log.d(TAG, "onComplete: currentLocation: " + currentLocation);
+////                            if(currentLocation != null) {
+////                                // move camera to the current location;
+////                                mSearchText.setCurrentLocation(currentLocation);
+//////                            Log.d(TAG, "onComplete: getDeviceLocation: " + currentLocation.toString());
+////                                moveCamera(new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude()), DEFAULT_ZOOM, null);
+////                            } else {
+////                                startLocationUpdate(mLocationCallback);
+////                            }
+////                        } else {
+////                            Log.d(TAG, "onComplete: not found current location");
+//////                            Toast.makeText(GoogleMapActivity.this, "unable to get current location", Toast.LENGTH_LONG).show();
+////                            startLocationUpdate(mLocationCallback);
+////                        }
+////                    }
+////                });
+//            }
+//        } catch (SecurityException e) {
+//            Log.e(TAG, "getDeviceLocation: SecurityException: " + e);
+//        }
+//    }
 
     private void moveCamera(LatLng latLng, float zoom, String title) {
         Log.d(TAG, "moveCamera: moving to " + latLng.latitude + ", " + latLng.longitude);
@@ -396,5 +470,21 @@ public class GoogleMapActivity extends AppCompatActivity implements OnMapReadyCa
         }
         super.onSaveInstanceState(outState);
     }
+
+//    private void startLocationUpdate(LocationCallback locationCallback) {
+//        Log.d(TAG, "startLocationUpdate: called: ");
+//        LocationRequest locationRequest = LocationRequest.create();
+//        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+//        locationRequest.setInterval(20*1000L);
+//        locationRequest.setFastestInterval(5000L);
+//        mLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, null);
+//    }
+//
+//    private void stopLocationUpdate(LocationCallback locationCallback) {
+//        if(mLocationProviderClient != null) {
+//            mLocationProviderClient.removeLocationUpdates(locationCallback);
+//            Log.d(TAG, "stopLocationUpdate: stopping location update");
+//        }
+//    }
 
 }

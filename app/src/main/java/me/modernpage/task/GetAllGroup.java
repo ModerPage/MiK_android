@@ -10,7 +10,7 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
 
-import me.modernpage.Constants;
+import me.modernpage.util.Constants;
 import me.modernpage.entity.Group;
 import me.modernpage.entity.GroupType;
 

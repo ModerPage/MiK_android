@@ -9,6 +9,7 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import androidx.annotation.CallSuper;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -20,17 +21,12 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
-import me.modernpage.Constants;
 import me.modernpage.activity.R;
 import me.modernpage.entity.Post;
+import me.modernpage.util.Constants;
 
 public class HomeRecyclerViewHolder extends RecyclerView.ViewHolder {
     private static final String TAG = "HomeRecyclerViewHolder";
-
-    enum FileType {IMAGE, VIDEO}
-
-    FileType mFileType;
-
     View parent;
     ImageView mPostAvatar;
     TextView mPostUsername;
@@ -38,7 +34,7 @@ public class HomeRecyclerViewHolder extends RecyclerView.ViewHolder {
     ImageButton mMore;
     ShowMoreTextView mPostDescription;
     FrameLayout mFileContainer;
-    ImageView mThumbnail, mVolumeControl, mPlayControl;
+
     ProgressBar mProgressBar;
     LinearLayout mPostLike;
     LinearLayout mPostComment;
@@ -61,9 +57,6 @@ public class HomeRecyclerViewHolder extends RecyclerView.ViewHolder {
         mPostDescription.setShowLessTextColor(Color.RED);
 
         mFileContainer = itemView.findViewById(R.id.userpost_filecontainer);
-        mThumbnail = itemView.findViewById(R.id.userpost_thumbnail);
-        mVolumeControl = itemView.findViewById(R.id.userpost_volume_control);
-        mPlayControl = itemView.findViewById(R.id.userpost_play_control);
         mProgressBar = itemView.findViewById(R.id.userpost_progressbar);
         mPostLike = itemView.findViewById(R.id.userpost_like);
         mPostComment = itemView.findViewById(R.id.userpost_comment);
@@ -72,6 +65,7 @@ public class HomeRecyclerViewHolder extends RecyclerView.ViewHolder {
         mCommentCount = itemView.findViewById(R.id.userpost_comment_count);
     }
 
+    @CallSuper
     public void onBind(Post post, RequestManager requestManager) {
         mRequestManager = requestManager;
         parent.setTag(this);
@@ -91,19 +85,20 @@ public class HomeRecyclerViewHolder extends RecyclerView.ViewHolder {
         int diffInHours = diffInMinutes / 60;
         int diffInDays = diffInHours / 24;
 
-        if (diffInDays > 0 && diffInDays < 6) {
-            String dayText = diffInDays == 1 ? diffInDays + " day ago" : diffInDays + " days ago";
-            mPostTime.setText(dayText);
-        } else if (diffInHours > 0) {
-            String hourText = diffInHours == 1 ? diffInHours + " hour ago" : diffInHours + " hours ago";
-            mPostTime.setText(hourText);
-        } else if (diffInMinutes >= 0) {
+        if (diffInMinutes >= 0 && diffInMinutes < 60) {
             String minuteText = diffInMinutes < 1 ? "just now" : diffInMinutes + " minutes ago";
             mPostTime.setText(minuteText);
+        } else if (diffInHours > 0 && diffInHours < 24) {
+            String hourText = diffInHours == 1 ? diffInHours + " hour ago" : diffInHours + " hours ago";
+            mPostTime.setText(hourText);
+        } else if (diffInDays > 0 && diffInDays < 6) {
+            String dayText = diffInDays == 1 ? diffInDays + " day ago" : diffInDays + " days ago";
+            mPostTime.setText(dayText);
         } else {
             DateFormat format = new SimpleDateFormat("yyyy-MM-dd 'at' HH:mm", Locale.getDefault());
             mPostTime.setText(format.format(post.getPostedDate()));
         }
+
 
         // count lines of post description
         int lines = post.getPostText().split("\r\n|\r|\n").length;
@@ -122,23 +117,5 @@ public class HomeRecyclerViewHolder extends RecyclerView.ViewHolder {
             mCommentCount.setText(post.getPostComments().size() + commentCountText);
         } else
             mCommentCount.setText("0 Comment");
-
-        String extension = post.getFileURL().substring(post.getFileURL().lastIndexOf(".") + 1);
-        if (extension.equalsIgnoreCase("jpg") ||
-                extension.equalsIgnoreCase("jpeg") ||
-                extension.equalsIgnoreCase("png")) {
-            mFileType = FileType.IMAGE;
-
-        } else if (extension.equalsIgnoreCase("mp4") ||
-                extension.equalsIgnoreCase("mov") ||
-                extension.equalsIgnoreCase("AVI") ||
-                extension.equalsIgnoreCase("wmv") ||
-                extension.equalsIgnoreCase("flv") ||
-                extension.equalsIgnoreCase("webm")) {
-            mFileType = FileType.VIDEO;
-        }
-
-        mRequestManager.load(Constants.Network.BASE_URL + post.getFileURL())
-                .into(mThumbnail);
     }
 }

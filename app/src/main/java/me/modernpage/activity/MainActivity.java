@@ -33,7 +33,7 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
 import de.hdodenhof.circleimageview.CircleImageView;
-import me.modernpage.Constants;
+import me.modernpage.util.Constants;
 import me.modernpage.entity.Group;
 import me.modernpage.entity.UserEntity;
 import me.modernpage.fragment.home.HomeFragment;
@@ -287,16 +287,22 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
                 mFragmentStatus = FragmentStatus.HOME_FRAGMENT;
                 return true;
             case R.id.nav_map:
+                if (mFragmentStatus == FragmentStatus.HOME_FRAGMENT)
+                    ((HomeFragment) mActiveFragment).stopPlay();
                 mFragmentManager.beginTransaction().hide(mActiveFragment).show(mMapFragment).commit();
                 mActiveFragment = mMapFragment;
                 mFragmentStatus = FragmentStatus.MAP_FRAGMENT;
                 return true;
             case R.id.nav_post:
+                if (mFragmentStatus == FragmentStatus.HOME_FRAGMENT)
+                    ((HomeFragment) mActiveFragment).stopPlay();
                 mFragmentManager.beginTransaction().hide(mActiveFragment).show(mPostFragment).commit();
                 mActiveFragment = mPostFragment;
                 mFragmentStatus = FragmentStatus.POST_FRAGMENT;
                 return true;
             case R.id.nav_group:
+                if (mFragmentStatus == FragmentStatus.HOME_FRAGMENT)
+                    ((HomeFragment) mActiveFragment).stopPlay();
                 mFragmentManager.beginTransaction().hide(mActiveFragment).show(mGroupFragment).commit();
                 mActiveFragment = mGroupFragment;
                 mFragmentStatus = FragmentStatus.GROUP_FRAGMENT;

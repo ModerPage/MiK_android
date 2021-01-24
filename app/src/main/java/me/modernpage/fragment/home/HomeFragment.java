@@ -24,6 +24,7 @@ import java.util.List;
 
 import me.modernpage.activity.R;
 import me.modernpage.entity.Post;
+import me.modernpage.entity.UserEntity;
 import me.modernpage.fragment.post.PostFragment;
 import me.modernpage.task.GetPosts;
 
@@ -88,7 +89,7 @@ public class HomeFragment extends Fragment implements PostFragment.OnAddedNewPos
         mProgressBar = view.findViewById(R.id.home_progressbar);
         mLayoutManager = new LinearLayoutManager(getContext());
         mRecyclerView.setLayoutManager(mLayoutManager);
-        mRecViewAdapter = new HomeRecyclerViewAdapter(initGlide());
+        mRecViewAdapter = new HomeRecyclerViewAdapter(new UserEntity(), initGlide()); // TODO add current user
         mRecyclerView.setAdapter(mRecViewAdapter);
         SpaceItemDecoration mSpaceItemDecoration = new SpaceItemDecoration(12);
         mRecyclerView.addItemDecoration(mSpaceItemDecoration);

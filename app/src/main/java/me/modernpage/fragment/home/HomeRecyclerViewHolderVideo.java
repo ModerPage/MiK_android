@@ -9,6 +9,7 @@ import com.bumptech.glide.RequestManager;
 
 import me.modernpage.activity.R;
 import me.modernpage.entity.Post;
+import me.modernpage.entity.UserEntity;
 import me.modernpage.util.Constants;
 
 public class HomeRecyclerViewHolderVideo extends HomeRecyclerViewHolder {
@@ -22,8 +23,8 @@ public class HomeRecyclerViewHolderVideo extends HomeRecyclerViewHolder {
     }
 
     @Override
-    public void onBind(Post post, RequestManager requestManager) {
-        super.onBind(post, requestManager);
+    public void onBind(UserEntity currentUser, Post post, RequestManager requestManager) {
+        super.onBind(currentUser, post, requestManager);
         requestManager.load(Constants.Network.BASE_URL + post.getFileURL())
                 .into(mThumbnail);
     }

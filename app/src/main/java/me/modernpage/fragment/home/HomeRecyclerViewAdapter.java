@@ -13,15 +13,19 @@ import java.util.List;
 
 import me.modernpage.activity.R;
 import me.modernpage.entity.Post;
+import me.modernpage.entity.UserEntity;
 
 public class HomeRecyclerViewAdapter extends RecyclerView.Adapter<HomeRecyclerViewHolder> {
+
+    private UserEntity mCurrentUser;
     private List<Post> mPosts;
     private RequestManager mRequestManager;
     private static final int TYPE_IMAGE = 1;
-    public static final int TYPE_VIDEO = 2;
+    private static final int TYPE_VIDEO = 2;
 
-    public HomeRecyclerViewAdapter(RequestManager requestManager) {
+    public HomeRecyclerViewAdapter(UserEntity currentUser, RequestManager requestManager) {
         mPosts = new ArrayList<>();
+        mCurrentUser = currentUser;
         mRequestManager = requestManager;
     }
 
@@ -71,7 +75,7 @@ public class HomeRecyclerViewAdapter extends RecyclerView.Adapter<HomeRecyclerVi
 
     @Override
     public void onBindViewHolder(@NonNull HomeRecyclerViewHolder holder, int position) {
-        holder.onBind(mPosts.get(position), mRequestManager);
+        holder.onBind(mCurrentUser, mPosts.get(position), mRequestManager);
     }
 
     @Override

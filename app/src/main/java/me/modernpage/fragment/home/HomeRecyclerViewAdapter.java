@@ -10,6 +10,8 @@ import com.bumptech.glide.RequestManager;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import me.modernpage.activity.R;
 import me.modernpage.entity.Post;
@@ -22,6 +24,7 @@ public class HomeRecyclerViewAdapter extends RecyclerView.Adapter<HomeRecyclerVi
     private RequestManager mRequestManager;
     private static final int TYPE_IMAGE = 1;
     private static final int TYPE_VIDEO = 2;
+    private ExecutorService mExecutorService = Executors.newSingleThreadExecutor();
 
     public HomeRecyclerViewAdapter(UserEntity currentUser, RequestManager requestManager) {
         mPosts = new ArrayList<>();
@@ -75,7 +78,7 @@ public class HomeRecyclerViewAdapter extends RecyclerView.Adapter<HomeRecyclerVi
 
     @Override
     public void onBindViewHolder(@NonNull HomeRecyclerViewHolder holder, int position) {
-        holder.onBind(mCurrentUser, mPosts.get(position), mRequestManager);
+        holder.onBind(mCurrentUser, mPosts.get(position), mRequestManager, mExecutorService);
     }
 
     @Override

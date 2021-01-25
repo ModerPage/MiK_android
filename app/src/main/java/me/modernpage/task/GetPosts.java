@@ -14,13 +14,10 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 
-import me.modernpage.util.Constants;
 import me.modernpage.entity.Comment;
 import me.modernpage.entity.Group;
 import me.modernpage.entity.GroupType;
@@ -28,15 +25,14 @@ import me.modernpage.entity.Like;
 import me.modernpage.entity.Location;
 import me.modernpage.entity.Post;
 import me.modernpage.entity.UserEntity;
+import me.modernpage.util.Constants;
 
 public class GetPosts extends AsyncTask<String, Void, List<Post>> {
     private static final String TAG = "GetPosts";
     private OnGetPosts mCallback;
-    private SimpleDateFormat mDateFormat;
 
     public GetPosts(OnGetPosts callback) {
         mCallback = callback;
-        mDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX", Locale.getDefault());
     }
 
     public interface OnGetPosts {
@@ -102,7 +98,7 @@ public class GetPosts extends AsyncTask<String, Void, List<Post>> {
                 String postText = postJSON.getString("postText");
                 String postFileURI = postJSON.getString("fileURI");
                 String postedDateText = postJSON.getString("postedDate");
-                Date postedDate = mDateFormat.parse(postedDateText);
+                Date postedDate = Constants.mDateFormat.parse(postedDateText);
 
                 JSONObject postOwnerJSON = postJSON.getJSONObject("postOwner");
                 String username = postOwnerJSON.getString("username");
@@ -145,7 +141,7 @@ public class GetPosts extends AsyncTask<String, Void, List<Post>> {
                 for (int j = 0, likeLength = likesJSON.length(); j < likeLength; j++) {
                     JSONObject likeJSON = (JSONObject) likesJSON.get(j);
                     long likeId = likeJSON.getLong("likeId");
-                    Date likedDate = mDateFormat.parse((String) likeJSON.get("likedDate"));
+                    Date likedDate = Constants.mDateFormat.parse((String) likeJSON.get("likedDate"));
                     JSONObject likedUserJSON = likeJSON.getJSONObject("likedUser");
                     String likedUserUsername = likedUserJSON.getString("username");
                     String likedUserEmail = likedUserJSON.getString("email");
@@ -170,7 +166,7 @@ public class GetPosts extends AsyncTask<String, Void, List<Post>> {
                     JSONObject commentJSON = (JSONObject) commentsJSON.get(c);
                     long commentId = commentJSON.getLong("commentId");
                     String commentText = commentJSON.getString("commentText");
-                    Date commentDate = mDateFormat.parse((String) commentJSON.get("commentDate"));
+                    Date commentDate = Constants.mDateFormat.parse((String) commentJSON.get("commentDate"));
 
                     JSONObject commentedUserJSON = commentJSON.getJSONObject("commentedUser");
                     String commentedUserUsername = commentedUserJSON.getString("username");

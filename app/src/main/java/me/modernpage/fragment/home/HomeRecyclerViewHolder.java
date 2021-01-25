@@ -22,6 +22,7 @@ import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Locale;
+import java.util.concurrent.ExecutorService;
 
 import me.modernpage.activity.R;
 import me.modernpage.entity.Comment;
@@ -29,10 +30,11 @@ import me.modernpage.entity.Like;
 import me.modernpage.entity.Post;
 import me.modernpage.entity.UserEntity;
 import me.modernpage.task.AddPostLike;
+import me.modernpage.task.DeletePostLike;
 import me.modernpage.util.App;
 import me.modernpage.util.Constants;
 
-public class HomeRecyclerViewHolder extends RecyclerView.ViewHolder implements AddPostLike.OnAddPostLike {
+public class HomeRecyclerViewHolder extends RecyclerView.ViewHolder implements AddPostLike.OnAddPostLike, DeletePostLike.OnDeletePostLike {
     private static final String TAG = "HomeRecyclerViewHolder";
 
     // ui
@@ -50,12 +52,15 @@ public class HomeRecyclerViewHolder extends RecyclerView.ViewHolder implements A
     TextView mLikeCount;
     TextView mCommentCount;
 
+
     // vars
     private enum LikeState {LIKED, UNLIKED}
 
+    private UserEntity mCurrentUser;
+    private Post mCurrentPost;
     private LikeState mLikeState;
     RequestManager mRequestManager;
-
+    ExecutorService mExecutorService;
     public HomeRecyclerViewHolder(@NonNull View itemView) {
         super(itemView);
         parent = itemView;
@@ -80,9 +85,12 @@ public class HomeRecyclerViewHolder extends RecyclerView.ViewHolder implements A
     }
 
     @CallSuper
-    public void onBind(UserEntity currentUser, Post post, RequestManager requestManager) {
-
+    public void onBind(UserEntity currentUser, Post post, RequestManager requestManager, ExecutorService executorService) {
         mRequestManager = requestManager;
+        mCurrentPost = post;
+        mCurrentUser = currentUser;
+        mExecutorService = executorService;
+
         parent.setTag(this);
         mRequestManager.load(Constants.Network.BASE_URL + post.getPostOwner().getImageUri())
                 .into(mPostAvatar);
@@ -108,6 +116,7 @@ public class HomeRecyclerViewHolder extends RecyclerView.ViewHolder implements A
         for (Like like : post.getPostLikes()) {
             if (currentUser.getEmail().equals(like.getLikeOwner().getEmail())) {
                 setLikeControl(LikeState.LIKED);
+                break;
             }
         }
 
@@ -118,9 +127,18 @@ public class HomeRecyclerViewHolder extends RecyclerView.ViewHolder implements A
             public void onClick(View view) {
                 if (mLikeState == LikeState.LIKED) {
                     setLikeControl(LikeState.UNLIKED);
+                    Like removingLike = null;
+                    for (Like like : post.getPostLikes()) {
+                        if (currentUser.getEmail().equals(like.getLikeOwner().getEmail())) {
+                            removingLike = like;
+                            break;
+                        }
+                    }
+                    DeletePostLike deletePostLike = new DeletePostLike(HomeRecyclerViewHolder.this);
+                    deletePostLike.execute(removingLike);
                 } else {
+                    Log.d(TAG, "onClick: addLike starts");
                     setLikeControl(LikeState.LIKED);
-
                     AddPostLike addPostLike = new AddPostLike(HomeRecyclerViewHolder.this);
                     Like newLike = new Like();
                     newLike.setLikeOwner(currentUser);
@@ -195,8 +213,23 @@ public class HomeRecyclerViewHolder extends RecyclerView.ViewHolder implements A
     }
 
     @Override
-    public void onAddPostLikeComplete(long likesCount) {
-        Log.d(TAG, "onAddPostLikeComplete: likesCount: " + likesCount);
-        mLikeCount.setText(setPostLikeText(likesCount));
+    public void onAddPostLikeComplete(Like addedLike) {
+        Log.d(TAG, "onAddPostLikeComplete: addLike completes");
+        addedLike.setLikedPost(mCurrentPost);
+        addedLike.setLikeOwner(mCurrentUser);
+        mCurrentPost.getPostLikes().add(addedLike);
+        mLikeCount.setText(setPostLikeText(mCurrentPost.getPostLikes().size()));
+    }
+
+    @Override
+    public void onDeletePostLikeComplete(Like removedLike) {
+        Log.d(TAG, "onDeletePostLikeComplete: deleteLike completes");
+        for (Like like : mCurrentPost.getPostLikes()) {
+            if (like.getLikeId() == removedLike.getLikeId()) {
+                mCurrentPost.getPostLikes().remove(like);
+                break;
+            }
+        }
+        mLikeCount.setText(setPostLikeText(mCurrentPost.getPostLikes().size()));
     }
 }

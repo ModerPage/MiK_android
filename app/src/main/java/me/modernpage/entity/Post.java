@@ -9,9 +9,9 @@ public class Post {
     private long postId;
     private UserEntity postOwner;
     private Location postLocation;
-    private Collection<Comment> postComments = new ArrayList<>();
+    private Collection<Comment> postComments;
     private Group postGroup;
-    private Collection<Like> postLikes = new ArrayList<>();
+    private Collection<Like> postLikes;
     private Date postedDate;
     private String postText;
     private String fileURL;
@@ -25,6 +25,8 @@ public class Post {
         this.postGroup = postGroup;
         this.postText = postText;
         this.fileURL = fileURL;
+        postComments = new ArrayList<>();
+        postLikes = new ArrayList<>();
     }
 
     public long getPostId() {

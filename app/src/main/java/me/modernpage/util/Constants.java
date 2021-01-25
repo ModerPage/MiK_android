@@ -5,12 +5,16 @@ import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 
+import java.text.SimpleDateFormat;
+import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Constants {
     private static final String TAG = "Constants";
-
+    public static SimpleDateFormat mDateFormat =
+            new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX", Locale.getDefault());
+    ;
     private Constants() {
     }
 
@@ -42,6 +46,7 @@ public class Constants {
         public static final String POSTUPLOADFILE_URL = BASE_URL + "/post/createPost";
         public static final String GETPOSTS_URL = BASE_URL + "/post/getPosts";
         public static final String ADDLIKE_URL = BASE_URL + "/post/addLike";
+        public static final String DELETELIKE_URL = BASE_URL + "/post/deleteLike";
     }
 
     public static class Regex {

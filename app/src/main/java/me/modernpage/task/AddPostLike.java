@@ -13,17 +13,19 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.ParseException;
+import java.util.Date;
 
 import me.modernpage.entity.Like;
 import me.modernpage.util.Constants;
 
-public class AddPostLike extends AsyncTask<Like, Void, Long> {
+public class AddPostLike extends AsyncTask<Like, Void, Like> {
     private static final String TAG = "AddPostLike";
 
     private OnAddPostLike mCallback;
 
     public interface OnAddPostLike {
-        void onAddPostLikeComplete(long likesCount);
+        void onAddPostLikeComplete(Like addedLike);
     }
 
     public AddPostLike(OnAddPostLike callback) {
@@ -31,7 +33,7 @@ public class AddPostLike extends AsyncTask<Like, Void, Long> {
     }
 
     @Override
-    protected Long doInBackground(Like... likes) {
+    protected Like doInBackground(Like... likes) {
         if (likes[0] == null)
             return null;
         HttpURLConnection connection = null;
@@ -56,7 +58,7 @@ public class AddPostLike extends AsyncTask<Like, Void, Long> {
             }
             bufferedReader.close();
             Log.d(TAG, "doInBackground: result: " + result.toString());
-            return getLikeCountFromJSON(result.toString());
+            return getLikeFromJSON(result.toString());
         } catch (MalformedURLException e) {
             Log.e(TAG, "doInBackground: MalformedURLException " + e.getMessage(), e);
         } catch (IOException e) {
@@ -69,7 +71,6 @@ public class AddPostLike extends AsyncTask<Like, Void, Long> {
                     e.printStackTrace();
                 }
             }
-
             if (connection != null) {
                 connection.disconnect();
             }
@@ -78,9 +79,9 @@ public class AddPostLike extends AsyncTask<Like, Void, Long> {
     }
 
     @Override
-    protected void onPostExecute(Long likesCount) {
+    protected void onPostExecute(Like like) {
         if (mCallback != null) {
-            mCallback.onAddPostLikeComplete(likesCount);
+            mCallback.onAddPostLikeComplete(like);
         }
     }
 
@@ -100,15 +101,20 @@ public class AddPostLike extends AsyncTask<Like, Void, Long> {
         return null;
     }
 
-    private long getLikeCountFromJSON(String jsonString) {
+    private Like getLikeFromJSON(String jsonString) {
         try {
-            JSONObject jsonLikeCount = new JSONObject(jsonString);
-            long likesCount = jsonLikeCount.getLong("likes_count");
-            Log.d(TAG, "getLikeCountFromJSON: likesCount: " + likesCount);
-            return likesCount;
+            JSONObject jsonLike = new JSONObject(jsonString);
+            long likeId = jsonLike.getLong("likeId");
+            Date likedDate = Constants.mDateFormat.parse((String) jsonLike.get("likedDate"));
+            Like like = new Like();
+            like.setLikeId(likeId);
+            like.setLikedDate(likedDate);
+            return like;
         } catch (JSONException e) {
             Log.e(TAG, "getLikeCountFromJSON: JSONException: " + e.getMessage(), e);
+        } catch (ParseException e) {
+            Log.e(TAG, "getLikeCountFromJSON: ParseException: " + e.getMessage(), e);
         }
-        return 0L;
+        return null;
     }
 }

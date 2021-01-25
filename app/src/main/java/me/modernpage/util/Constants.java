@@ -41,6 +41,7 @@ public class Constants {
         public static final String GETALLGROUP_URL = BASE_URL + "/group/getAllGroups";
         public static final String POSTUPLOADFILE_URL = BASE_URL + "/post/createPost";
         public static final String GETPOSTS_URL = BASE_URL + "/post/getPosts";
+        public static final String ADDLIKE_URL = BASE_URL + "/post/addLike";
     }
 
     public static class Regex {

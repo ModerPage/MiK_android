@@ -27,6 +27,7 @@ import me.modernpage.entity.Post;
 import me.modernpage.entity.UserEntity;
 import me.modernpage.fragment.post.PostFragment;
 import me.modernpage.task.GetPosts;
+import me.modernpage.util.Constants;
 
 
 /**
@@ -45,6 +46,7 @@ public class HomeFragment extends Fragment implements PostFragment.OnAddedNewPos
     private HomeRecyclerViewAdapter mRecViewAdapter;
     private LinearLayoutManager mLayoutManager;
     private ProgressBar mProgressBar;
+    private UserEntity mCurrentUser;
 
     private RecyclerView.OnScrollListener mRecyclerViewOnScrollListener = new RecyclerView.OnScrollListener() {
         @Override
@@ -85,11 +87,15 @@ public class HomeFragment extends Fragment implements PostFragment.OnAddedNewPos
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        if (getArguments() != null) {
+            mCurrentUser = (UserEntity) getArguments().getSerializable(Constants.User.CURRENT_USER_EXTRA);
+        }
+
         mRecyclerView = view.findViewById(R.id.home_post_list);
         mProgressBar = view.findViewById(R.id.home_progressbar);
         mLayoutManager = new LinearLayoutManager(getContext());
         mRecyclerView.setLayoutManager(mLayoutManager);
-        mRecViewAdapter = new HomeRecyclerViewAdapter(new UserEntity(), initGlide()); // TODO add current user
+        mRecViewAdapter = new HomeRecyclerViewAdapter(mCurrentUser, initGlide()); // TODO add current user
         mRecyclerView.setAdapter(mRecViewAdapter);
         SpaceItemDecoration mSpaceItemDecoration = new SpaceItemDecoration(12);
         mRecyclerView.addItemDecoration(mSpaceItemDecoration);
@@ -162,5 +168,13 @@ public class HomeFragment extends Fragment implements PostFragment.OnAddedNewPos
     public void stopPlay() {
         if (mRecyclerView != null)
             mRecyclerView.stopPlaying();
+    }
+
+    public static Fragment newInstance(UserEntity currentUser) {
+        HomeFragment fragment = new HomeFragment();
+        Bundle bundle = new Bundle();
+        bundle.putSerializable(Constants.User.CURRENT_USER_EXTRA, currentUser);
+        fragment.setArguments(bundle);
+        return fragment;
     }
 }

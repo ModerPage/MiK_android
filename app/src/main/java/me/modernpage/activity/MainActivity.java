@@ -79,10 +79,6 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
         mFragmentManager = getSupportFragmentManager();
 
         if (mFragmentManager.getFragments().isEmpty()) {
-            mHomeFragment = new HomeFragment();
-            mMapFragment = new MapFragment();
-            mActiveFragment = mHomeFragment;
-            mFragmentStatus = FragmentStatus.HOME_FRAGMENT;
 
             mCountDownLatch = new CountDownLatch(2);
 
@@ -104,10 +100,17 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
                             public void run() {
                                 Log.d(TAG, "runOnUiThread: called");
                                 MainActivity.this.stopProgressBar();
+                                mHomeFragment = HomeFragment.newInstance(mCurrentUser);
+                                mMapFragment = new MapFragment();
                                 mPostFragment = PostFragment.newInstance(mCurrentUser, mCurrentGroups);
                                 mGroupFragment = GroupFragment.newInstance(mCurrentGroups);
                                 mFragmentManager.beginTransaction().add(R.id.main_frag_container, mGroupFragment, "4").hide(mGroupFragment).commit();
                                 mFragmentManager.beginTransaction().add(R.id.main_frag_container, mPostFragment, "3").hide(mPostFragment).commit();
+                                mFragmentManager.beginTransaction().add(R.id.main_frag_container, mMapFragment, "2").hide(mMapFragment).commit();
+                                mFragmentManager.beginTransaction().add(R.id.main_frag_container, mHomeFragment, "1").hide(mHomeFragment).commit();
+                                mActiveFragment = mHomeFragment;
+                                mFragmentStatus = FragmentStatus.HOME_FRAGMENT;
+                                mFragmentManager.beginTransaction().show(mActiveFragment).commit();
                             }
                         });
 
@@ -242,10 +245,10 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
 
         Log.d(TAG, "onResume: mFragmentManager size:" + mFragmentManager.getFragments().size());
         if (mFragmentManager.getFragments().size() == 0) {
-            mFragmentManager.beginTransaction().add(R.id.main_frag_container, mMapFragment, "2").hide(mMapFragment).commit();
-            mFragmentManager.beginTransaction().add(R.id.main_frag_container, mHomeFragment, "1").hide(mHomeFragment).commit();
+
+
         }
-        mFragmentManager.beginTransaction().show(mActiveFragment).commit();
+
 
         TextView following_count =(TextView) mNavigationView.getMenu().findItem(R.id.nav_profile_following).getActionView();
         following_count.setGravity(Gravity.CENTER_VERTICAL);

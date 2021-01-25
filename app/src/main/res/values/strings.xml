@@ -43,12 +43,12 @@
     <string name="userpost_comment_text">Comment</string>
     <string name="userpost_share_text">Share</string>
 
+    <!--\u0020 is for adding blank space -->
+    <string name="comment_counter_suffix_singular">\u0020Comment</string>
+    <string name="comment_counter_suffix_plural">\u0020Comments</string>
+    <string name="comment_counter_suffix_kplural">K\u0020Comments</string>
 
-    <string name="comment_counter_suffix_singular"> Comment</string>
-    <string name="comment_counter_suffix_plural"> Comments</string>
-    <string name="comment_counter_suffix_kplural">K Comments</string>
-
-    <string name="like_counter_suffix_singular"> Like</string>
-    <string name="like_counter_suffix_plural"> Likes</string>
-    <string name="like_counter_suffix_kplural">K Likes</string>
+    <string name="like_counter_suffix_singular">\u0020Like</string>
+    <string name="like_counter_suffix_plural">\u0020Likes</string>
+    <string name="like_counter_suffix_kplural">K\u0020Likes</string>
 </resources>

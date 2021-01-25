@@ -71,6 +71,14 @@ public class GetPosts extends AsyncTask<String, Void, List<Post>> {
         } catch (IOException e) {
             Log.d(TAG, "doInBackground: IOException: " + e.getMessage(), e);
         } finally {
+            if (bufferedReader != null) {
+                try {
+                    bufferedReader.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
             if (httpURLConnection != null) {
                 httpURLConnection.disconnect();
             }

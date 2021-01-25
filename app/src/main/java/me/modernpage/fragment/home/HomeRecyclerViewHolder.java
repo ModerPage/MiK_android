@@ -28,10 +28,11 @@ import me.modernpage.entity.Comment;
 import me.modernpage.entity.Like;
 import me.modernpage.entity.Post;
 import me.modernpage.entity.UserEntity;
+import me.modernpage.task.AddPostLike;
 import me.modernpage.util.App;
 import me.modernpage.util.Constants;
 
-public class HomeRecyclerViewHolder extends RecyclerView.ViewHolder {
+public class HomeRecyclerViewHolder extends RecyclerView.ViewHolder implements AddPostLike.OnAddPostLike {
     private static final String TAG = "HomeRecyclerViewHolder";
 
     // ui
@@ -50,8 +51,10 @@ public class HomeRecyclerViewHolder extends RecyclerView.ViewHolder {
     TextView mCommentCount;
 
     // vars
+    private enum LikeState {LIKED, UNLIKED}
+
+    private LikeState mLikeState;
     RequestManager mRequestManager;
-    private boolean isLiked = false;
 
     public HomeRecyclerViewHolder(@NonNull View itemView) {
         super(itemView);
@@ -73,6 +76,7 @@ public class HomeRecyclerViewHolder extends RecyclerView.ViewHolder {
         mPostShare = itemView.findViewById(R.id.userpost_share);
         mLikeCount = itemView.findViewById(R.id.userpost_like_count);
         mCommentCount = itemView.findViewById(R.id.userpost_comment_count);
+
     }
 
     @CallSuper
@@ -100,21 +104,28 @@ public class HomeRecyclerViewHolder extends RecyclerView.ViewHolder {
 
         mPostDescription.setText(post.getPostText());
 
-        mLikeCount.setText(setPostLikeText(post.getPostLikes()));
+        mLikeCount.setText(setPostLikeText(post.getPostLikes().size()));
+        for (Like like : post.getPostLikes()) {
+            if (currentUser.getEmail().equals(like.getLikeOwner().getEmail())) {
+                setLikeControl(LikeState.LIKED);
+            }
+        }
 
         mCommentCount.setText(setPostCommentText(post.getPostComments()));
 
         mPostLike.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                ImageView likeImage = view.findViewById(R.id.userpost_like_image);
-                Log.d(TAG, "onClick: isLiked: " + isLiked);
-                if (isLiked) {
-                    likeImage.setImageResource(R.drawable.ic_like_unfilled);
-                    isLiked = false;
+                if (mLikeState == LikeState.LIKED) {
+                    setLikeControl(LikeState.UNLIKED);
                 } else {
-                    likeImage.setImageResource(R.drawable.ic_like_filled);
-                    isLiked = true;
+                    setLikeControl(LikeState.LIKED);
+
+                    AddPostLike addPostLike = new AddPostLike(HomeRecyclerViewHolder.this);
+                    Like newLike = new Like();
+                    newLike.setLikeOwner(currentUser);
+                    newLike.setLikedPost(post);
+                    addPostLike.execute(newLike);
                 }
             }
         });
@@ -160,22 +171,32 @@ public class HomeRecyclerViewHolder extends RecyclerView.ViewHolder {
         return null;
     }
 
-    private String setPostLikeText(Collection<Like> likes) {
-        if (likes != null) {
-            int likeCount = likes.size();
-            String likeCountText;
-
-            if (likeCount <= 1) {
-
-                likeCountText = App.getResource().getString(R.string.like_counter_suffix_singular);
-            } else if (likeCount < 1000) {
-                likeCountText = App.getResource().getString(R.string.like_counter_suffix_plural);
-            } else {
-                likeCountText = App.getResource().getString(R.string.like_counter_suffix_kplural);
-            }
-
-            return (likeCount < 1000 ? likeCount : likeCount / 1000) + likeCountText;
+    private String setPostLikeText(long likesCount) {
+        String likeCountText;
+        if (likesCount <= 1) {
+            likeCountText = App.getResource().getString(R.string.like_counter_suffix_singular);
+        } else if (likesCount < 1000) {
+            likeCountText = App.getResource().getString(R.string.like_counter_suffix_plural);
+        } else {
+            likeCountText = App.getResource().getString(R.string.like_counter_suffix_kplural);
         }
-        return null;
+
+        return (likesCount < 1000 ? likesCount : likesCount / 1000) + likeCountText;
+    }
+
+    private void setLikeControl(LikeState state) {
+        mLikeState = state;
+        ImageView likeImage = mPostLike.findViewById(R.id.userpost_like_image);
+        if (state == LikeState.LIKED) {
+            likeImage.setImageResource(R.drawable.ic_like_filled);
+        } else if (state == LikeState.UNLIKED) {
+            likeImage.setImageResource(R.drawable.ic_like_unfilled);
+        }
+    }
+
+    @Override
+    public void onAddPostLikeComplete(long likesCount) {
+        Log.d(TAG, "onAddPostLikeComplete: likesCount: " + likesCount);
+        mLikeCount.setText(setPostLikeText(likesCount));
     }
 }

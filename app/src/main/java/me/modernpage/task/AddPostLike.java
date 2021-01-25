@@ -1,0 +1,114 @@
+package me.modernpage.task;
+
+import android.os.AsyncTask;
+import android.util.Log;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+
+import me.modernpage.entity.Like;
+import me.modernpage.util.Constants;
+
+public class AddPostLike extends AsyncTask<Like, Void, Long> {
+    private static final String TAG = "AddPostLike";
+
+    private OnAddPostLike mCallback;
+
+    public interface OnAddPostLike {
+        void onAddPostLikeComplete(long likesCount);
+    }
+
+    public AddPostLike(OnAddPostLike callback) {
+        mCallback = callback;
+    }
+
+    @Override
+    protected Long doInBackground(Like... likes) {
+        if (likes[0] == null)
+            return null;
+        HttpURLConnection connection = null;
+        BufferedReader bufferedReader = null;
+        try {
+            URL url = new URL(Constants.Network.ADDLIKE_URL);
+            connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("PUT");
+            connection.setReadTimeout(10000);
+            connection.setConnectTimeout(15000);
+            connection.setDoInput(true);
+            connection.setDoOutput(true);
+            connection.connect();
+            OutputStream outputStream = connection.getOutputStream();
+            outputStream.write(jsonRequestBody(likes[0]).getBytes());
+            outputStream.close();
+
+            StringBuilder result = new StringBuilder();
+            bufferedReader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+            for (String line = bufferedReader.readLine(); line != null; line = bufferedReader.readLine()) {
+                result.append(line).append("\n");
+            }
+            bufferedReader.close();
+            Log.d(TAG, "doInBackground: result: " + result.toString());
+            return getLikeCountFromJSON(result.toString());
+        } catch (MalformedURLException e) {
+            Log.e(TAG, "doInBackground: MalformedURLException " + e.getMessage(), e);
+        } catch (IOException e) {
+            Log.e(TAG, "doInBackground: IOException " + e.getMessage(), e);
+        } finally {
+            if (bufferedReader != null) {
+                try {
+                    bufferedReader.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            if (connection != null) {
+                connection.disconnect();
+            }
+        }
+        return null;
+    }
+
+    @Override
+    protected void onPostExecute(Long likesCount) {
+        if (mCallback != null) {
+            mCallback.onAddPostLikeComplete(likesCount);
+        }
+    }
+
+    private String jsonRequestBody(Like like) {
+        // likeOwner
+        //      liked userId
+        // likedPost
+        //      liked postId
+        JSONObject jsonObject = new JSONObject();
+        try {
+            jsonObject.put("userEmail", like.getLikeOwner().getEmail());
+            jsonObject.put("postId", like.getLikedPost().getPostId());
+            return jsonObject.toString();
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private long getLikeCountFromJSON(String jsonString) {
+        try {
+            JSONObject jsonLikeCount = new JSONObject(jsonString);
+            long likesCount = jsonLikeCount.getLong("likes_count");
+            Log.d(TAG, "getLikeCountFromJSON: likesCount: " + likesCount);
+            return likesCount;
+        } catch (JSONException e) {
+            Log.e(TAG, "getLikeCountFromJSON: JSONException: " + e.getMessage(), e);
+        }
+        return 0L;
+    }
+}

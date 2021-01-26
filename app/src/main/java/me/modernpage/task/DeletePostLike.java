@@ -1,6 +1,6 @@
 package me.modernpage.task;
 
-import android.os.AsyncTask;
+import android.os.Handler;
 import android.util.Log;
 
 import org.json.JSONException;
@@ -14,31 +14,50 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.ParseException;
 import java.util.Date;
+import java.util.concurrent.ExecutorService;
 
 import me.modernpage.entity.Like;
 import me.modernpage.util.Constants;
 
-public class DeletePostLike extends AsyncTask<Like, Void, Like> {
+public class DeletePostLike {
     private static final String TAG = "DeletePostLike";
     private OnDeletePostLike mCallback;
+    private ExecutorService mExecutorService;
+    private Handler mMainThreadHandler;
 
     public interface OnDeletePostLike {
         void onDeletePostLikeComplete(Like removedLike);
     }
 
-    public DeletePostLike(OnDeletePostLike callback) {
+    public DeletePostLike(OnDeletePostLike callback, ExecutorService executorService, Handler handler) {
         mCallback = callback;
+        mExecutorService = executorService;
+        mMainThreadHandler = handler;
     }
 
-    @Override
-    protected void onPostExecute(Like removedLike) {
-        if (mCallback != null)
-            mCallback.onDeletePostLikeComplete(removedLike);
+    public void deleteLike(final Like like) {
+        mExecutorService.execute(new Runnable() {
+            @Override
+            public void run() {
+                Like deletedLike = doInBackground(like);
+                notifyResult(deletedLike);
+            }
+        });
     }
 
-    @Override
-    protected Like doInBackground(Like... likes) {
-        if (likes[0] == null)
+    private void notifyResult(Like like) {
+        Log.d(TAG, "notifyResult: like: " + like);
+        mMainThreadHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                if (mCallback != null)
+                    mCallback.onDeletePostLikeComplete(like);
+            }
+        });
+    }
+
+    private Like doInBackground(Like like) {
+        if (like == null)
             return null;
 
         HttpURLConnection connection = null;
@@ -52,7 +71,7 @@ public class DeletePostLike extends AsyncTask<Like, Void, Like> {
             connection.setDoOutput(true);
             connection.connect();
             OutputStreamWriter osw = new OutputStreamWriter(connection.getOutputStream());
-            osw.write(jsonRequestBody(likes[0]));
+            osw.write(jsonRequestBody(like));
             osw.close();
 
             InputStreamReader isr = new InputStreamReader(connection.getInputStream());

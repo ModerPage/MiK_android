@@ -1,11 +1,15 @@
 package me.modernpage.fragment.home;
 
+import android.os.Handler;
 import android.view.View;
 import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
 
 import com.bumptech.glide.RequestManager;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ThreadPoolExecutor;
 
 import me.modernpage.activity.R;
 import me.modernpage.entity.Post;
@@ -23,8 +27,8 @@ public class HomeRecyclerViewHolderVideo extends HomeRecyclerViewHolder {
     }
 
     @Override
-    public void onBind(UserEntity currentUser, Post post, RequestManager requestManager) {
-        super.onBind(currentUser, post, requestManager);
+    public void onBind(UserEntity currentUser, Post post, RequestManager requestManager, ThreadPoolExecutor executorService, Handler handler) {
+        super.onBind(currentUser, post, requestManager, executorService, handler);
         requestManager.load(Constants.Network.BASE_URL + post.getFileURL())
                 .into(mThumbnail);
     }

@@ -1,17 +1,21 @@
 package me.modernpage.fragment.home;
 
+import android.os.Handler;
+import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
+import androidx.core.os.HandlerCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.RequestManager;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import me.modernpage.activity.R;
 import me.modernpage.entity.Post;
@@ -24,7 +28,8 @@ public class HomeRecyclerViewAdapter extends RecyclerView.Adapter<HomeRecyclerVi
     private RequestManager mRequestManager;
     private static final int TYPE_IMAGE = 1;
     private static final int TYPE_VIDEO = 2;
-    private ExecutorService mExecutorService = Executors.newSingleThreadExecutor();
+    private ThreadPoolExecutor mExecutorService = new ThreadPoolExecutor(1, 1, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>(1));
+    private Handler mMainThreadHandler = HandlerCompat.createAsync(Looper.getMainLooper());
 
     public HomeRecyclerViewAdapter(UserEntity currentUser, RequestManager requestManager) {
         mPosts = new ArrayList<>();
@@ -78,7 +83,7 @@ public class HomeRecyclerViewAdapter extends RecyclerView.Adapter<HomeRecyclerVi
 
     @Override
     public void onBindViewHolder(@NonNull HomeRecyclerViewHolder holder, int position) {
-        holder.onBind(mCurrentUser, mPosts.get(position), mRequestManager, mExecutorService);
+        holder.onBind(mCurrentUser, mPosts.get(position), mRequestManager, mExecutorService, mMainThreadHandler);
     }
 
     @Override

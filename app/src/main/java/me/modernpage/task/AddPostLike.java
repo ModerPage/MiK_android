@@ -1,6 +1,6 @@
 package me.modernpage.task;
 
-import android.os.AsyncTask;
+import android.os.Handler;
 import android.util.Log;
 
 import org.json.JSONException;
@@ -15,26 +15,51 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.ParseException;
 import java.util.Date;
+import java.util.concurrent.ExecutorService;
 
 import me.modernpage.entity.Like;
 import me.modernpage.util.Constants;
 
-public class AddPostLike extends AsyncTask<Like, Void, Like> {
+public class AddPostLike {
     private static final String TAG = "AddPostLike";
 
     private OnAddPostLike mCallback;
-
+    private ExecutorService mExecutorService;
+    private Handler mMainThreadHandler;
     public interface OnAddPostLike {
         void onAddPostLikeComplete(Like addedLike);
     }
 
-    public AddPostLike(OnAddPostLike callback) {
+    public AddPostLike(OnAddPostLike callback, ExecutorService executorService, Handler handler) {
         mCallback = callback;
+        mExecutorService = executorService;
+        mMainThreadHandler = handler;
     }
 
-    @Override
-    protected Like doInBackground(Like... likes) {
-        if (likes[0] == null)
+    public void addLike(final Like like) {
+        mExecutorService.execute(new Runnable() {
+            @Override
+            public void run() {
+                Like addedLike = doInBackground(like);
+                notifyResult(addedLike);
+            }
+        });
+    }
+
+
+    private void notifyResult(Like like) {
+        mMainThreadHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                if (mCallback != null)
+                    mCallback.onAddPostLikeComplete(like);
+            }
+        });
+    }
+
+
+    protected Like doInBackground(Like like) {
+        if (like == null)
             return null;
         HttpURLConnection connection = null;
         BufferedReader bufferedReader = null;
@@ -48,7 +73,7 @@ public class AddPostLike extends AsyncTask<Like, Void, Like> {
             connection.setDoOutput(true);
             connection.connect();
             OutputStream outputStream = connection.getOutputStream();
-            outputStream.write(jsonRequestBody(likes[0]).getBytes());
+            outputStream.write(jsonRequestBody(like).getBytes());
             outputStream.close();
 
             StringBuilder result = new StringBuilder();
@@ -78,12 +103,6 @@ public class AddPostLike extends AsyncTask<Like, Void, Like> {
         return null;
     }
 
-    @Override
-    protected void onPostExecute(Like like) {
-        if (mCallback != null) {
-            mCallback.onAddPostLikeComplete(like);
-        }
-    }
 
     private String jsonRequestBody(Like like) {
         // likeOwner

@@ -1,6 +1,7 @@
 package me.modernpage.fragment.home;
 
 import android.graphics.Color;
+import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 import android.widget.FrameLayout;
@@ -22,7 +23,7 @@ import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Locale;
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ThreadPoolExecutor;
 
 import me.modernpage.activity.R;
 import me.modernpage.entity.Comment;
@@ -60,9 +61,12 @@ public class HomeRecyclerViewHolder extends RecyclerView.ViewHolder implements A
     private Post mCurrentPost;
     private LikeState mLikeState;
     RequestManager mRequestManager;
-    ExecutorService mExecutorService;
+    private ThreadPoolExecutor mExecutorService;
+    private Handler mMainThreadHandler;
+
     public HomeRecyclerViewHolder(@NonNull View itemView) {
         super(itemView);
+        Log.d(TAG, "HomeRecyclerViewHolder: called");
         parent = itemView;
         mPostAvatar = itemView.findViewById(R.id.userpost_avatar);
         mPostUsername = itemView.findViewById(R.id.userpost_username);
@@ -85,11 +89,12 @@ public class HomeRecyclerViewHolder extends RecyclerView.ViewHolder implements A
     }
 
     @CallSuper
-    public void onBind(UserEntity currentUser, Post post, RequestManager requestManager, ExecutorService executorService) {
+    public void onBind(UserEntity currentUser, Post post, RequestManager requestManager, ThreadPoolExecutor executorService, Handler handler) {
         mRequestManager = requestManager;
         mCurrentPost = post;
         mCurrentUser = currentUser;
         mExecutorService = executorService;
+        mMainThreadHandler = handler;
 
         parent.setTag(this);
         mRequestManager.load(Constants.Network.BASE_URL + post.getPostOwner().getImageUri())
@@ -113,11 +118,8 @@ public class HomeRecyclerViewHolder extends RecyclerView.ViewHolder implements A
         mPostDescription.setText(post.getPostText());
 
         mLikeCount.setText(setPostLikeText(post.getPostLikes().size()));
-        for (Like like : post.getPostLikes()) {
-            if (currentUser.getEmail().equals(like.getLikeOwner().getEmail())) {
-                setLikeControl(LikeState.LIKED);
-                break;
-            }
+        if (currentUserLike() != null) {
+            setLikeControl(LikeState.LIKED);
         }
 
         mCommentCount.setText(setPostCommentText(post.getPostComments()));
@@ -126,27 +128,40 @@ public class HomeRecyclerViewHolder extends RecyclerView.ViewHolder implements A
             @Override
             public void onClick(View view) {
                 if (mLikeState == LikeState.LIKED) {
+                    Log.d(TAG, "onClick: deleteLike starts");
                     setLikeControl(LikeState.UNLIKED);
-                    Like removingLike = null;
-                    for (Like like : post.getPostLikes()) {
-                        if (currentUser.getEmail().equals(like.getLikeOwner().getEmail())) {
-                            removingLike = like;
-                            break;
-                        }
+                    Like removingLike = currentUserLike();
+
+                    if (removingLike != null) {
+                        DeletePostLike deletePostLike = new DeletePostLike(
+                                HomeRecyclerViewHolder.this, mExecutorService, mMainThreadHandler);
+                        deletePostLike.deleteLike(removingLike);
                     }
-                    DeletePostLike deletePostLike = new DeletePostLike(HomeRecyclerViewHolder.this);
-                    deletePostLike.execute(removingLike);
                 } else {
                     Log.d(TAG, "onClick: addLike starts");
+
                     setLikeControl(LikeState.LIKED);
-                    AddPostLike addPostLike = new AddPostLike(HomeRecyclerViewHolder.this);
-                    Like newLike = new Like();
-                    newLike.setLikeOwner(currentUser);
-                    newLike.setLikedPost(post);
-                    addPostLike.execute(newLike);
+
+                    if (currentUserLike() == null) {
+                        Like newLike = new Like();
+                        newLike.setLikeOwner(currentUser);
+                        newLike.setLikedPost(post);
+
+                        AddPostLike addPostLike = new AddPostLike(
+                                HomeRecyclerViewHolder.this, mExecutorService, mMainThreadHandler);
+                        addPostLike.addLike(newLike);
+                    }
                 }
             }
         });
+    }
+
+    private Like currentUserLike() {
+        for (Like like : mCurrentPost.getPostLikes()) {
+            if (mCurrentUser.getEmail().equals(like.getLikeOwner().getEmail()))
+                return like;
+        }
+        return null;
     }
 
     private String setPostDate(Date postDate) {
@@ -214,7 +229,6 @@ public class HomeRecyclerViewHolder extends RecyclerView.ViewHolder implements A
 
     @Override
     public void onAddPostLikeComplete(Like addedLike) {
-        Log.d(TAG, "onAddPostLikeComplete: addLike completes");
         addedLike.setLikedPost(mCurrentPost);
         addedLike.setLikeOwner(mCurrentUser);
         mCurrentPost.getPostLikes().add(addedLike);
@@ -223,13 +237,11 @@ public class HomeRecyclerViewHolder extends RecyclerView.ViewHolder implements A
 
     @Override
     public void onDeletePostLikeComplete(Like removedLike) {
-        Log.d(TAG, "onDeletePostLikeComplete: deleteLike completes");
-        for (Like like : mCurrentPost.getPostLikes()) {
-            if (like.getLikeId() == removedLike.getLikeId()) {
-                mCurrentPost.getPostLikes().remove(like);
-                break;
-            }
-        }
+        if (removedLike == null)
+            return;
+
+        mCurrentPost.getPostLikes().remove(currentUserLike());
+
         mLikeCount.setText(setPostLikeText(mCurrentPost.getPostLikes().size()));
     }
 }

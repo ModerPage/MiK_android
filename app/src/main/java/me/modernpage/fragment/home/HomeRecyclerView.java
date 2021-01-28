@@ -27,14 +27,15 @@ import com.google.android.exoplayer2.ui.AspectRatioFrameLayout;
 import com.google.android.exoplayer2.ui.PlayerView;
 import com.google.android.exoplayer2.upstream.DataSource;
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
+import com.google.android.exoplayer2.util.EventLogger;
 import com.google.android.exoplayer2.util.Util;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import me.modernpage.util.Constants;
 import me.modernpage.activity.R;
 import me.modernpage.entity.Post;
+import me.modernpage.util.Constants;
 
 public class HomeRecyclerView extends RecyclerView {
     private static final String TAG = "HomeRecyclerView";
@@ -53,7 +54,7 @@ public class HomeRecyclerView extends RecyclerView {
 
     // vars
     private List<Post> mPosts = new ArrayList<>();
-    private int mVideoSurfaceDefaulHeight = 0;
+    private int mVideoSurfaceDefaultHeight = 0;
     private int mScreenDefaultHeight = 0;
     private Context mContext;
     private int mPlayPosition = -1;
@@ -79,11 +80,22 @@ public class HomeRecyclerView extends RecyclerView {
         Point point = new Point();
         display.getSize(point);
 
-        mVideoSurfaceDefaulHeight = point.x;
+        mVideoSurfaceDefaultHeight = point.x;
         mScreenDefaultHeight = point.y;
 
         mVideoSurfaceView = new PlayerView(mContext);
         mVideoSurfaceView.setResizeMode(AspectRatioFrameLayout.RESIZE_MODE_ZOOM);
+
+//        BandwidthMeter bandwidthMeter = new DefaultBandwidthMeter();
+//        TrackSelection.Factory videoTrackSelectionFactory =
+//                new AdaptiveTrackSelection.Factory(bandwidthMeter);
+//        TrackSelector trackSelector =
+//                new DefaultTrackSelector(videoTrackSelectionFactory);
+//
+//        // 2. Create the player
+//        videoPlayer = ExoPlayerFactory.newSimpleInstance(context, trackSelector);
+//        BandwidthMeter bandwidthMeter = new DefaultBandwidthMeter.Builder(context).build();
+//        TrackSelection.Factory videoTrackSelectionFactory = new AdaptiveTrackSelection.Factory();
 
         mVideoPlayer = new SimpleExoPlayer.Builder(context).build();
         mVideoSurfaceView.setUseController(false);
@@ -157,9 +169,8 @@ public class HomeRecyclerView extends RecyclerView {
                             // adding video view to list item
                             // if (mFileType == HomeRecyclerViewHolder.FileType.VIDEO) {
                             addVideoView();
-                            if (mPlayState == PlayState.PLAY)
-                                mVideoPlayer.play();
-                            //  }
+                            if (mPlayState == PlayState.PAUSE)
+                                mVideoPlayer.pause();
                         }
                         break;
                     default:
@@ -230,13 +241,15 @@ public class HomeRecyclerView extends RecyclerView {
             mVolumeControl.setOnClickListener(mVolumeControlOnClickListener);
 
             DataSource.Factory dataSourceFactory = new DefaultDataSourceFactory(
-                    mContext, Util.getUserAgent(mContext, "RecyclerView VideoPlayer"));
+                    mContext, Util.getUserAgent(mContext, "Make It Known"));
             String mediaUrl = mPosts.get(targetPosition).getFileURL();
             if (mediaUrl != null) {
                 MediaSource videoSource = new ProgressiveMediaSource.Factory(dataSourceFactory)
                         .createMediaSource(MediaItem.fromUri(Constants.Network.BASE_URL + mediaUrl));
+                mVideoPlayer.addAnalyticsListener(new EventLogger(null));
                 mVideoPlayer.setMediaSource(videoSource);
                 mVideoPlayer.prepare();
+                mVideoPlayer.play();
             }
         }
 
@@ -252,7 +265,7 @@ public class HomeRecyclerView extends RecyclerView {
         child.getLocationInWindow(location);
 
         if (location[1] < 0)
-            return location[1] + mVideoSurfaceDefaulHeight;
+            return location[1] + mVideoSurfaceDefaultHeight;
         else
             return mScreenDefaultHeight - location[1];
     }
@@ -398,10 +411,16 @@ public class HomeRecyclerView extends RecyclerView {
     }
 
     public void stopPlaying() {
+        if (mVideoPlayer != null) {
+//            setPlayControl(PlayState.PAUSE);
+            mVideoPlayer.pause();
+        }
+    }
+
+    public void resumePlaying() {
         if (mVideoPlayer != null && mIsVideoViewAdded) {
-            if (mVideoPlayer.isPlaying()) {
-                setPlayControl(PlayState.PAUSE);
-            }
+            if (mPlayState == PlayState.PLAY)
+                mVideoPlayer.play();
         }
     }
 }

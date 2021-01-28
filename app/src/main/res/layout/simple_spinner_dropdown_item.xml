@@ -3,6 +3,6 @@
     android:id="@android:id/text1"
     style="?android:attr/spinnerDropDownItemStyle"
     android:singleLine="true"
-    android:layout_width="match_parent"
+    android:layout_width="wrap_content"
     android:layout_height="30dp"
     android:ellipsize="marquee"/>

@@ -33,17 +33,22 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
 import de.hdodenhof.circleimageview.CircleImageView;
-import me.modernpage.util.Constants;
 import me.modernpage.entity.Group;
+import me.modernpage.entity.Post;
 import me.modernpage.entity.UserEntity;
-import me.modernpage.fragment.home.HomeFragment;
 import me.modernpage.fragment.MapFragment;
 import me.modernpage.fragment.group.GroupFragment;
+import me.modernpage.fragment.home.HomeFragment;
+import me.modernpage.fragment.home.OnPostClickListener;
 import me.modernpage.fragment.post.PostFragment;
 import me.modernpage.task.GetAllGroup;
 import me.modernpage.task.ProcessUser;
+import me.modernpage.util.Constants;
 
-public class MainActivity extends AppCompatActivity implements BottomNavigationView.OnNavigationItemSelectedListener, ProcessUser.OnProcessUser, GetAllGroup.OnGetAllGroup {
+public class MainActivity extends AppCompatActivity implements
+        BottomNavigationView.OnNavigationItemSelectedListener, ProcessUser.OnProcessUser,
+        GetAllGroup.OnGetAllGroup, OnPostClickListener {
+
     private static final String TAG = "MainActivity";
     private static final String ACTIVE_FRAGMENT_EXTRA = "active_fragment";
 
@@ -79,7 +84,6 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
         mFragmentManager = getSupportFragmentManager();
 
         if (mFragmentManager.getFragments().isEmpty()) {
-
             mCountDownLatch = new CountDownLatch(2);
 
             GetAllGroup getAllGroup = new GetAllGroup(this);
@@ -92,9 +96,7 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
                 @Override
                 public void run() {
                     try {
-                        Log.d(TAG, "run: before await");
                         mCountDownLatch.await();
-                        Log.d(TAG, "run: after await");
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
@@ -113,7 +115,6 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
                                 mFragmentManager.beginTransaction().show(mActiveFragment).commit();
                             }
                         });
-
                     } catch (InterruptedException e) {
                         Log.e(TAG, "run: InterruptedException " + e.getMessage(), e);
                     }
@@ -185,6 +186,20 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
             }
         });
 
+        TextView following_count = (TextView) mNavigationView.getMenu().findItem(R.id.nav_profile_following).getActionView();
+        following_count.setGravity(Gravity.CENTER_VERTICAL);
+        following_count.setTypeface(null, Typeface.BOLD);
+        following_count.setText("0");
+
+        TextView followers_count = (TextView) mNavigationView.getMenu().findItem(R.id.nav_profile_followers).getActionView();
+        followers_count.setGravity(Gravity.CENTER_VERTICAL);
+        followers_count.setTypeface(null, Typeface.BOLD);
+        followers_count.setText("0");
+
+        TextView posts_count = (TextView) mNavigationView.getMenu().findItem(R.id.nav_profile_posts).getActionView();
+        posts_count.setGravity(Gravity.CENTER_VERTICAL);
+        posts_count.setTypeface(null, Typeface.BOLD);
+        posts_count.setText("0");
 
         Log.d(TAG, "onCreate: ends");
     }
@@ -242,28 +257,9 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
     @Override
     protected void onResume() {
         Log.d(TAG, "onResume: called");
-
-        Log.d(TAG, "onResume: mFragmentManager size:" + mFragmentManager.getFragments().size());
-        if (mFragmentManager.getFragments().size() == 0) {
-
-
+        if (mActiveFragment != null) {
+            mFragmentManager.beginTransaction().show(mActiveFragment).commit();
         }
-
-
-        TextView following_count =(TextView) mNavigationView.getMenu().findItem(R.id.nav_profile_following).getActionView();
-        following_count.setGravity(Gravity.CENTER_VERTICAL);
-        following_count.setTypeface(null, Typeface.BOLD);
-        following_count.setText("0");
-
-        TextView followers_count = (TextView) mNavigationView.getMenu().findItem(R.id.nav_profile_followers).getActionView();
-        followers_count.setGravity(Gravity.CENTER_VERTICAL);
-        followers_count.setTypeface(null, Typeface.BOLD);
-        followers_count.setText("0");
-
-        TextView posts_count = (TextView) mNavigationView.getMenu().findItem(R.id.nav_profile_posts).getActionView();
-        posts_count.setGravity(Gravity.CENTER_VERTICAL);
-        posts_count.setTypeface(null, Typeface.BOLD);
-        posts_count.setText("0");
         super.onResume();
     }
 
@@ -382,5 +378,13 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
         Log.d(TAG, "onGetAllGroupComplete: called");
         mCurrentGroups = groups;
         mCountDownLatch.countDown();
+    }
+
+    @Override
+    public void onPostClick(Long postId) {
+        Intent intent = new Intent(this, PostDetailActivity.class);
+        intent.putExtra(Post.class.getSimpleName(), postId);
+        intent.putExtra(UserEntity.class.getSimpleName(), mCurrentUser);
+        startActivity(intent);
     }
 }

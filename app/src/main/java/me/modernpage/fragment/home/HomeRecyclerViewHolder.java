@@ -53,16 +53,17 @@ public class HomeRecyclerViewHolder extends RecyclerView.ViewHolder implements A
     TextView mLikeCount;
     TextView mCommentCount;
 
-
     // vars
     private enum LikeState {LIKED, UNLIKED}
 
     private UserEntity mCurrentUser;
     private Post mCurrentPost;
+    private Like mLike;
     private LikeState mLikeState;
     RequestManager mRequestManager;
     private ThreadPoolExecutor mExecutorService;
     private Handler mMainThreadHandler;
+    private OnPostClickListener mPostClickListener;
 
     public HomeRecyclerViewHolder(@NonNull View itemView) {
         super(itemView);
@@ -89,12 +90,15 @@ public class HomeRecyclerViewHolder extends RecyclerView.ViewHolder implements A
     }
 
     @CallSuper
-    public void onBind(UserEntity currentUser, Post post, RequestManager requestManager, ThreadPoolExecutor executorService, Handler handler) {
+    public void onBind(UserEntity currentUser, Post post, RequestManager requestManager,
+                       ThreadPoolExecutor executorService, Handler handler, OnPostClickListener listener) {
+
         mRequestManager = requestManager;
         mCurrentPost = post;
         mCurrentUser = currentUser;
         mExecutorService = executorService;
         mMainThreadHandler = handler;
+        mPostClickListener = listener;
 
         parent.setTag(this);
         mRequestManager.load(Constants.Network.BASE_URL + post.getPostOwner().getImageUri())
@@ -118,9 +122,14 @@ public class HomeRecyclerViewHolder extends RecyclerView.ViewHolder implements A
         mPostDescription.setText(post.getPostText());
 
         mLikeCount.setText(setPostLikeText(post.getPostLikes().size()));
-        if (currentUserLike() != null) {
+        mLike = currentUserLike();
+        if (mLike != null) {
             setLikeControl(LikeState.LIKED);
+        } else {
+            setLikeControl(LikeState.UNLIKED);
         }
+
+        Log.d(TAG, "onBind: currentUserLike : " + currentUserLike());
 
         mCommentCount.setText(setPostCommentText(post.getPostComments()));
 
@@ -130,7 +139,7 @@ public class HomeRecyclerViewHolder extends RecyclerView.ViewHolder implements A
                 if (mLikeState == LikeState.LIKED) {
                     Log.d(TAG, "onClick: deleteLike starts");
                     setLikeControl(LikeState.UNLIKED);
-                    Like removingLike = currentUserLike();
+                    Like removingLike = mLike;
 
                     if (removingLike != null) {
                         DeletePostLike deletePostLike = new DeletePostLike(
@@ -142,7 +151,7 @@ public class HomeRecyclerViewHolder extends RecyclerView.ViewHolder implements A
 
                     setLikeControl(LikeState.LIKED);
 
-                    if (currentUserLike() == null) {
+                    if (mLike == null) {
                         Like newLike = new Like();
                         newLike.setLikeOwner(currentUser);
                         newLike.setLikedPost(post);
@@ -152,6 +161,24 @@ public class HomeRecyclerViewHolder extends RecyclerView.ViewHolder implements A
                         addPostLike.addLike(newLike);
                     }
                 }
+            }
+        });
+
+        mPostComment.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Log.d(TAG, "onClick: post comment clicked");
+                if (mPostClickListener != null)
+                    mPostClickListener.onPostClick(mCurrentPost.getPostId());
+            }
+        });
+
+        parent.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Log.d(TAG, "onClick: item view clicked");
+                if (mPostClickListener != null)
+                    mPostClickListener.onPostClick(mCurrentPost.getPostId());
             }
         });
     }
@@ -229,6 +256,7 @@ public class HomeRecyclerViewHolder extends RecyclerView.ViewHolder implements A
 
     @Override
     public void onAddPostLikeComplete(Like addedLike) {
+        mLike = addedLike;
         addedLike.setLikedPost(mCurrentPost);
         addedLike.setLikeOwner(mCurrentUser);
         mCurrentPost.getPostLikes().add(addedLike);
@@ -240,8 +268,8 @@ public class HomeRecyclerViewHolder extends RecyclerView.ViewHolder implements A
         if (removedLike == null)
             return;
 
-        mCurrentPost.getPostLikes().remove(currentUserLike());
-
+        mCurrentPost.getPostLikes().remove(mLike);
         mLikeCount.setText(setPostLikeText(mCurrentPost.getPostLikes().size()));
+        mLike = null;
     }
 }

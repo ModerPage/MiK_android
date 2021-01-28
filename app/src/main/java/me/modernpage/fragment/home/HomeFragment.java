@@ -33,7 +33,9 @@ import me.modernpage.util.Constants;
 /**
  * A simple {@link Fragment} subclass.
  */
-public class HomeFragment extends Fragment implements PostFragment.OnAddedNewPost, GetPosts.OnGetPosts {
+public class HomeFragment extends Fragment implements
+        PostFragment.OnAddedNewPost, GetPosts.OnGetPosts {
+
     private static final String TAG = "HomeFragment";
 
     private static final int PAGE_SIZE = 5;
@@ -95,7 +97,8 @@ public class HomeFragment extends Fragment implements PostFragment.OnAddedNewPos
         mProgressBar = view.findViewById(R.id.home_progressbar);
         mLayoutManager = new LinearLayoutManager(getContext());
         mRecyclerView.setLayoutManager(mLayoutManager);
-        mRecViewAdapter = new HomeRecyclerViewAdapter(mCurrentUser, initGlide()); // TODO add current user
+        mRecViewAdapter = new HomeRecyclerViewAdapter(mCurrentUser, initGlide(),
+                (OnPostClickListener) getActivity());
         mRecyclerView.setAdapter(mRecViewAdapter);
         SpaceItemDecoration mSpaceItemDecoration = new SpaceItemDecoration(12);
         mRecyclerView.addItemDecoration(mSpaceItemDecoration);
@@ -160,9 +163,16 @@ public class HomeFragment extends Fragment implements PostFragment.OnAddedNewPos
 
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
+        Log.d(TAG, "onSaveInstanceState: called");
         outState.putInt(CURRENTPAGE_EXTRA, mCurrentPage);
         outState.putBoolean(ISLASTPAGE_EXTRA, mIsLastPage);
         super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        stopPlay();
     }
 
     public void stopPlay() {
@@ -176,5 +186,12 @@ public class HomeFragment extends Fragment implements PostFragment.OnAddedNewPos
         bundle.putSerializable(Constants.User.CURRENT_USER_EXTRA, currentUser);
         fragment.setArguments(bundle);
         return fragment;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (mRecyclerView != null)
+            mRecyclerView.resumePlaying();
     }
 }

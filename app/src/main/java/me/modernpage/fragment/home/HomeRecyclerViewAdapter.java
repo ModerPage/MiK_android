@@ -30,11 +30,13 @@ public class HomeRecyclerViewAdapter extends RecyclerView.Adapter<HomeRecyclerVi
     private static final int TYPE_VIDEO = 2;
     private ThreadPoolExecutor mExecutorService = new ThreadPoolExecutor(1, 1, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>(1));
     private Handler mMainThreadHandler = HandlerCompat.createAsync(Looper.getMainLooper());
+    private OnPostClickListener mPostClickListener;
 
-    public HomeRecyclerViewAdapter(UserEntity currentUser, RequestManager requestManager) {
+    public HomeRecyclerViewAdapter(UserEntity currentUser, RequestManager requestManager, OnPostClickListener listener) {
         mPosts = new ArrayList<>();
         mCurrentUser = currentUser;
         mRequestManager = requestManager;
+        mPostClickListener = listener;
     }
 
     void addPostFront(Post post) {
@@ -83,7 +85,7 @@ public class HomeRecyclerViewAdapter extends RecyclerView.Adapter<HomeRecyclerVi
 
     @Override
     public void onBindViewHolder(@NonNull HomeRecyclerViewHolder holder, int position) {
-        holder.onBind(mCurrentUser, mPosts.get(position), mRequestManager, mExecutorService, mMainThreadHandler);
+        holder.onBind(mCurrentUser, mPosts.get(position), mRequestManager, mExecutorService, mMainThreadHandler, mPostClickListener);
     }
 
     @Override

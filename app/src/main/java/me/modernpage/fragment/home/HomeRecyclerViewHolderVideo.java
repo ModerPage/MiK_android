@@ -8,7 +8,6 @@ import androidx.annotation.NonNull;
 
 import com.bumptech.glide.RequestManager;
 
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 
 import me.modernpage.activity.R;
@@ -27,8 +26,9 @@ public class HomeRecyclerViewHolderVideo extends HomeRecyclerViewHolder {
     }
 
     @Override
-    public void onBind(UserEntity currentUser, Post post, RequestManager requestManager, ThreadPoolExecutor executorService, Handler handler) {
-        super.onBind(currentUser, post, requestManager, executorService, handler);
+    public void onBind(UserEntity currentUser, Post post, RequestManager requestManager,
+                       ThreadPoolExecutor executorService, Handler handler, OnPostClickListener listener) {
+        super.onBind(currentUser, post, requestManager, executorService, handler, listener);
         requestManager.load(Constants.Network.BASE_URL + post.getFileURL())
                 .into(mThumbnail);
     }

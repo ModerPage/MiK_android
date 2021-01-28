@@ -1,10 +1,13 @@
 package me.modernpage.entity;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 
-public class Post {
+public class Post implements Serializable {
+
+    private static final long serialVersionUID = 20210126L;
 
     private long postId;
     private UserEntity postOwner;

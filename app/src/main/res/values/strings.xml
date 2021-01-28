@@ -51,4 +51,5 @@
     <string name="like_counter_suffix_singular">\u0020Like</string>
     <string name="like_counter_suffix_plural">\u0020Likes</string>
     <string name="like_counter_suffix_kplural">K\u0020Likes</string>
+    <string name="post_detail_comment_hint">Write a comment...</string>
 </resources>

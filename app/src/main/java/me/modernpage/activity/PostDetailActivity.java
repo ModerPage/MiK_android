@@ -1,10 +1,14 @@
 package me.modernpage.activity;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
+import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
@@ -47,12 +51,13 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import de.hdodenhof.circleimageview.CircleImageView;
+import me.modernpage.entity.Comment;
 import me.modernpage.entity.Like;
 import me.modernpage.entity.Post;
 import me.modernpage.entity.UserEntity;
-import me.modernpage.task.AddPostLike;
-import me.modernpage.task.DeletePostLike;
 import me.modernpage.task.GetPostById;
+import me.modernpage.task.ProcessPostComment;
+import me.modernpage.task.ProcessPostLike;
 import me.modernpage.util.App;
 import me.modernpage.util.Constants;
 
@@ -60,7 +65,8 @@ import static android.view.View.GONE;
 import static android.view.View.VISIBLE;
 
 public class PostDetailActivity extends AppCompatActivity implements
-        GetPostById.OnGetPostByIdListener, AddPostLike.OnAddPostLike, DeletePostLike.OnDeletePostLike {
+        GetPostById.OnGetPostByIdListener, ProcessPostLike.OnProcessPostLikeListener,
+        ProcessPostComment.OnProcessPostCommentListener {
     private static final String TAG = "PostDetailActivity";
 
     // ui
@@ -88,15 +94,12 @@ public class PostDetailActivity extends AppCompatActivity implements
     private UserEntity mCurrentUser;
     private RequestManager mRequestManager;
 
+
     private enum FileType {IMAGE, VIDEO}
 
     private enum PlayState {PLAY, PAUSE}
 
-    ;
-
     private enum VolumeState {ON, OFF}
-
-    ;
 
     private enum LikeState {LIKED, UNLIKED}
 
@@ -112,6 +115,8 @@ public class PostDetailActivity extends AppCompatActivity implements
     private ThreadPoolExecutor mExecutorService = new ThreadPoolExecutor(
             1, 1, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>(1));
     private Handler mMainThreadHandler = HandlerCompat.createAsync(Looper.getMainLooper());
+    private ProcessPostLike mProcessPostLike;
+    private ProcessPostComment mProcessPostComment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -172,6 +177,9 @@ public class PostDetailActivity extends AppCompatActivity implements
         mVideoPlayer.addListener(videoPlayerListener);
         mPlayState = PlayState.PLAY;
         setVolumeControl(VolumeState.ON);
+
+        mProcessPostLike = new ProcessPostLike(this, mExecutorService, mMainThreadHandler);
+        mProcessPostComment = new ProcessPostComment(this, mExecutorService, mMainThreadHandler);
     }
 
     private Player.EventListener videoPlayerListener = new Player.EventListener() {
@@ -243,7 +251,7 @@ public class PostDetailActivity extends AppCompatActivity implements
         else
             mPostOwnerUsername.setText(post.getPostOwner().getUsername());
 
-        mPostDate.setText(setPostDate(post.getPostedDate()));
+        mPostDate.setText(setDate(post.getPostedDate()));
 
 
         mPostDescription.setText(post.getPostText());
@@ -281,7 +289,87 @@ public class PostDetailActivity extends AppCompatActivity implements
 
         getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
         mPostProgressbar.setVisibility(GONE);
+        mPostCommentSend.setOnClickListener(mAddCommentClickListener);
+
+        for (Comment comment : mCurrentPost.getPostComments()) {
+            addCommentView(comment);
+        }
+
+        mPostShare.setOnClickListener(mShareOnClickListener);
+
     }
+
+    private View.OnClickListener mShareOnClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+            if (mCurrentPost != null) {
+//                Uri bmpFileUri = getLocalBitmapUri(mPostThumbnail);
+//                if(bmpFileUri != null) {
+                Intent sendIntent = new Intent();
+                sendIntent.setAction(Intent.ACTION_SEND);
+                String shareData = mCurrentPost.getPostText() + " by " + mCurrentPost.getPostOwner().getUsername() + ". "
+                        + Constants.Network.BASE_URL + mCurrentPost.getFileURL() + " On MiK app";
+                sendIntent.putExtra(Intent.EXTRA_TEXT, shareData);
+                sendIntent.setType("text/*");
+
+
+                Intent shareIntent = Intent.createChooser(sendIntent, null);
+                startActivity(shareIntent);
+//                }
+            }
+        }
+    };
+
+    // share post image to other app
+//    private Uri getLocalBitmapUri(ImageView imageView) {
+//        Drawable drawable = imageView.getDrawable();
+//        Bitmap bmp = null;
+//        if(drawable instanceof BitmapDrawable) {
+//            bmp = ((BitmapDrawable)imageView.getDrawable()).getBitmap();
+//        } else {
+//            return null;
+//        }
+//
+//        // Store image to default external storage directory
+//        Uri bmpUri = null;
+//        try {
+//            // Use methods on Context to access package-specific directories on external storage.
+//            // This way, you don't need to request external read/write permission.
+//            // See https://youtu.be/5xVh-7ywKpE?t=25m25s
+//            File cacheFile = new File(getExternalCacheDir(), "Pictures");
+//            cacheFile.mkdir();
+//            File file =  new File(cacheFile,"share_image_" + System.currentTimeMillis() + ".png");
+//            FileOutputStream out = new FileOutputStream(file);
+//            bmp.compress(Bitmap.CompressFormat.PNG, 90, out);
+//            out.close();
+//            // **Warning:** for API >= 24 (Nougat), use a FileProvider as shown below instead.
+//            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+//                bmpUri = FileProvider.getUriForFile(PostDetailActivity.this, "me.modernpage.makeitknown.provider", file);
+//            } else {
+//                bmpUri = Uri.fromFile(file);
+//            }
+//        } catch (IOException e) {
+//            Log.e(TAG, "getLocalBitmapUri: IOException: " + e.getMessage(), e);
+//        }
+//        return bmpUri;
+//    }
+
+
+    private View.OnClickListener mAddCommentClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+            String commentText = mPostCommentText.getText().toString();
+            if (commentText.trim().length() > 0) {
+                if (mCurrentPost != null && mCurrentUser != null) {
+                    Comment comment = new Comment();
+                    comment.setCommentText(commentText);
+                    comment.setCommentedPost(mCurrentPost);
+                    comment.setCommentOwner(mCurrentUser);
+                    mProcessPostComment.addComment(comment);
+                }
+            }
+        }
+    };
 
     private View.OnClickListener mLikeOnClickListener = new View.OnClickListener() {
         @Override
@@ -292,9 +380,7 @@ public class PostDetailActivity extends AppCompatActivity implements
                 Like removingLike = mLike;
 
                 if (removingLike != null) {
-                    DeletePostLike deletePostLike = new DeletePostLike(
-                            PostDetailActivity.this, mExecutorService, mMainThreadHandler);
-                    deletePostLike.deleteLike(removingLike);
+                    mProcessPostLike.deleteLike(removingLike);
                 }
             } else {
                 Log.d(TAG, "onClick: addLike starts");
@@ -305,10 +391,7 @@ public class PostDetailActivity extends AppCompatActivity implements
                     Like newLike = new Like();
                     newLike.setLikeOwner(mCurrentUser);
                     newLike.setLikedPost(mCurrentPost);
-
-                    AddPostLike addPostLike = new AddPostLike(
-                            PostDetailActivity.this, mExecutorService, mMainThreadHandler);
-                    addPostLike.addLike(newLike);
+                    mProcessPostLike.addLike(newLike);
                 }
             }
         }
@@ -436,7 +519,7 @@ public class PostDetailActivity extends AppCompatActivity implements
         return null;
     }
 
-    private String setPostDate(Date postDate) {
+    private String setDate(Date postDate) {
         Date now = new Date();
         long diffInMillies = now.getTime() - postDate.getTime();
         int diffInMinutes = (int) (diffInMillies / (1000 * 60));
@@ -538,5 +621,56 @@ public class PostDetailActivity extends AppCompatActivity implements
         mPlayState = (PlayState) savedInstanceState.getSerializable(PlayState.class.getSimpleName());
         mVolumeState = (VolumeState) savedInstanceState.getSerializable(VolumeState.class.getSimpleName());
         setVolumeControl(mVolumeState);
+    }
+
+    @Override
+    public void onAddPostCommentComplete(Comment addedComment) {
+        if (addedComment == null) {
+            Toast.makeText(this, "adding comment failed", Toast.LENGTH_LONG).show();
+            return;
+        }
+        mPostCommentText.getText().clear();
+
+        addedComment.setCommentOwner(mCurrentUser);
+        addedComment.setCommentedPost(mCurrentPost);
+
+//        mCurrentPost.getPostComments().add(addedComment);
+        addCommentView(addedComment);
+
+    }
+
+    private void addCommentView(Comment comment) {
+        View commentView = LayoutInflater.from(this).inflate(R.layout.layout_comment_view_item,
+                mPostCommentContainer, false);
+
+        ImageView commentAvatar = commentView.findViewById(R.id.comment_view_avatar);
+        TextView commentOwnerName = commentView.findViewById(R.id.comment_view_owner_fullname);
+        TextView commentText = commentView.findViewById(R.id.comment_view_text);
+        TextView commentTime = commentView.findViewById(R.id.comment_view_time);
+        TextView commentDelete = commentView.findViewById(R.id.comment_view_delete);
+        mRequestManager.load(Constants.Network.BASE_URL + comment.getCommentOwner().getImageUri())
+                .into(commentAvatar);
+        commentOwnerName.setText(comment.getCommentOwner().getFullname());
+        commentText.setText(comment.getCommentText());
+        commentTime.setText(setDate(comment.getCommentDate()));
+
+        commentDelete.setClickable(true);
+        commentDelete.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Log.d(TAG, "onClick: comment delete clicked");
+                mPostCommentContainer.removeView(commentView);
+                mProcessPostComment.deleteComment(comment);
+            }
+        });
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        params.gravity = Gravity.TOP | Gravity.START;
+
+        mPostCommentContainer.addView(commentView, params);
+    }
+
+    @Override
+    public void onDeletePostCommentComplete(Comment removedComment) {
+        Log.d(TAG, "onDeletePostCommentComplete: removedComment: " + removedComment.getCommentText());
     }
 }

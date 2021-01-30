@@ -3,4 +3,10 @@
     <external-path
         name="captured_image"
         path="DCIM/" />
+    <!--    <external-files-path-->
+    <!--        name="images"-->
+    <!--        path="Pictures"/>-->
+    <external-cache-path
+        name="images"
+        path="Pictures" />
 </paths>

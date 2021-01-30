@@ -1,5 +1,6 @@
 package me.modernpage.fragment.home;
 
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Handler;
 import android.util.Log;
@@ -30,12 +31,11 @@ import me.modernpage.entity.Comment;
 import me.modernpage.entity.Like;
 import me.modernpage.entity.Post;
 import me.modernpage.entity.UserEntity;
-import me.modernpage.task.AddPostLike;
-import me.modernpage.task.DeletePostLike;
+import me.modernpage.task.ProcessPostLike;
 import me.modernpage.util.App;
 import me.modernpage.util.Constants;
 
-public class HomeRecyclerViewHolder extends RecyclerView.ViewHolder implements AddPostLike.OnAddPostLike, DeletePostLike.OnDeletePostLike {
+public class HomeRecyclerViewHolder extends RecyclerView.ViewHolder implements ProcessPostLike.OnProcessPostLikeListener {
     private static final String TAG = "HomeRecyclerViewHolder";
 
     // ui
@@ -64,6 +64,7 @@ public class HomeRecyclerViewHolder extends RecyclerView.ViewHolder implements A
     private ThreadPoolExecutor mExecutorService;
     private Handler mMainThreadHandler;
     private OnPostClickListener mPostClickListener;
+    private ProcessPostLike mProcessPostLike;
 
     public HomeRecyclerViewHolder(@NonNull View itemView) {
         super(itemView);
@@ -86,7 +87,6 @@ public class HomeRecyclerViewHolder extends RecyclerView.ViewHolder implements A
         mPostShare = itemView.findViewById(R.id.userpost_share);
         mLikeCount = itemView.findViewById(R.id.userpost_like_count);
         mCommentCount = itemView.findViewById(R.id.userpost_comment_count);
-
     }
 
     @CallSuper
@@ -99,6 +99,7 @@ public class HomeRecyclerViewHolder extends RecyclerView.ViewHolder implements A
         mExecutorService = executorService;
         mMainThreadHandler = handler;
         mPostClickListener = listener;
+        mProcessPostLike = new ProcessPostLike(this, mExecutorService, handler);
 
         parent.setTag(this);
         mRequestManager.load(Constants.Network.BASE_URL + post.getPostOwner().getImageUri())
@@ -136,15 +137,14 @@ public class HomeRecyclerViewHolder extends RecyclerView.ViewHolder implements A
         mPostLike.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+
                 if (mLikeState == LikeState.LIKED) {
                     Log.d(TAG, "onClick: deleteLike starts");
                     setLikeControl(LikeState.UNLIKED);
                     Like removingLike = mLike;
 
                     if (removingLike != null) {
-                        DeletePostLike deletePostLike = new DeletePostLike(
-                                HomeRecyclerViewHolder.this, mExecutorService, mMainThreadHandler);
-                        deletePostLike.deleteLike(removingLike);
+                        mProcessPostLike.deleteLike(removingLike);
                     }
                 } else {
                     Log.d(TAG, "onClick: addLike starts");
@@ -155,10 +155,7 @@ public class HomeRecyclerViewHolder extends RecyclerView.ViewHolder implements A
                         Like newLike = new Like();
                         newLike.setLikeOwner(currentUser);
                         newLike.setLikedPost(post);
-
-                        AddPostLike addPostLike = new AddPostLike(
-                                HomeRecyclerViewHolder.this, mExecutorService, mMainThreadHandler);
-                        addPostLike.addLike(newLike);
+                        mProcessPostLike.addLike(newLike);
                     }
                 }
             }
@@ -181,6 +178,8 @@ public class HomeRecyclerViewHolder extends RecyclerView.ViewHolder implements A
                     mPostClickListener.onPostClick(mCurrentPost.getPostId());
             }
         });
+
+        mPostShare.setOnClickListener(mShareOnClickListener);
     }
 
     private Like currentUserLike() {
@@ -190,6 +189,24 @@ public class HomeRecyclerViewHolder extends RecyclerView.ViewHolder implements A
         }
         return null;
     }
+
+    private View.OnClickListener mShareOnClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+            if (mCurrentPost != null) {
+                Intent sendIntent = new Intent();
+                sendIntent.setAction(Intent.ACTION_SEND);
+                String shareData = mCurrentPost.getPostText() + " by " + mCurrentPost.getPostOwner().getUsername() + ". "
+                        + Constants.Network.BASE_URL + mCurrentPost.getFileURL() + " On MiK app";
+                sendIntent.putExtra(Intent.EXTRA_TEXT, shareData);
+                sendIntent.setType("text/*");
+
+
+                Intent shareIntent = Intent.createChooser(sendIntent, null);
+                itemView.getContext().startActivity(shareIntent);
+            }
+        }
+    };
 
     private String setPostDate(Date postDate) {
         Date now = new Date();

@@ -163,6 +163,7 @@ public class GetPostById extends AsyncTask<Long, Void, Post> {
 
                 JSONObject commentedUserJSON = commentJSON.getJSONObject("commentedUser");
                 String commentedUserUsername = commentedUserJSON.getString("username");
+                String commentedUserFullname = commentedUserJSON.getString("fullname");
                 String commentedUsetEmail = commentedUserJSON.getString("email");
                 String commentedUserImageURI = commentedUserJSON.getString("imageURI");
 
@@ -170,11 +171,13 @@ public class GetPostById extends AsyncTask<Long, Void, Post> {
                 commentedUser.setUsername(commentedUserUsername);
                 commentedUser.setEmail(commentedUsetEmail);
                 commentedUser.setImageUri(commentedUserImageURI);
+                commentedUser.setFullname(commentedUserFullname);
 
                 Comment comment = new Comment();
                 comment.setCommentId(commentId);
                 comment.setCommentText(commentText);
                 comment.setCommentDate(commentDate);
+                comment.setCommentOwner(commentedUser);
 
                 postComments.add(comment);
             }

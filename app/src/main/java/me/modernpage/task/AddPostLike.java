@@ -58,7 +58,7 @@ public class AddPostLike {
     }
 
 
-    protected Like doInBackground(Like like) {
+    private Like doInBackground(Like like) {
         if (like == null)
             return null;
         HttpURLConnection connection = null;
@@ -66,7 +66,7 @@ public class AddPostLike {
         try {
             URL url = new URL(Constants.Network.ADDLIKE_URL);
             connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod("PUT");
+            connection.setRequestMethod("POST");
             connection.setReadTimeout(10000);
             connection.setConnectTimeout(15000);
             connection.setDoInput(true);

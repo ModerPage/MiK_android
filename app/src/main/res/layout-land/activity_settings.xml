@@ -1,0 +1,314 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+        <variable
+            name="processState"
+            type="boolean" />
+
+        <variable
+            name="imageUrl"
+            type="String" />
+
+        <variable
+            name="handler"
+            type="me.modernpage.ui.settings.SettingsActivity.Handler" />
+
+        <variable
+            name="viewModel"
+            type="me.modernpage.ui.settings.SettingsViewModel" />
+    </data>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/settings_toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <TextView
+                android:id="@+id/toolbar_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:fontFamily="@font/roboto_medium"
+                android:text="@string/settings"
+                android:textColor="@color/primaryDarkColor"
+                android:textSize="20sp" />
+        </androidx.appcompat.widget.Toolbar>
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/settings_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintTop_toTopOf="parent">
+
+                <FrameLayout
+                    android:id="@+id/frameLayout"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="24dp"
+                    android:onClick="@{() -> handler.uploadImageClicked()}"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent">
+
+                    <de.hdodenhof.circleimageview.CircleImageView
+                        android:id="@+id/settings_update_avatar"
+                        android:layout_width="125dp"
+                        android:layout_height="125dp"
+                        app:setImageByUri="@{viewModel.uploadedImage}"
+                        app:setImageByUrl="@{viewModel.imageURL}"
+                        app:placeholder="@{@drawable/white_background}"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintHorizontal_bias="0.5"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                    <de.hdodenhof.circleimageview.CircleImageView
+                        android:id="@+id/settings_avatar"
+                        android:layout_width="125dp"
+                        android:layout_height="125dp"
+                        android:src="@drawable/avatar_upload"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintHorizontal_bias="0.5"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                </FrameLayout>
+
+                <TextView
+                    android:id="@+id/textView11"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="24dp"
+                    android:fontFamily="@font/roboto"
+                    android:text="Fullname"
+                    android:textSize="14sp"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/frameLayout" />
+
+                <EditText
+                    android:id="@+id/settings_fullname"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginEnd="8dp"
+                    android:background="@drawable/textfield_bg"
+                    android:padding="12dp"
+                    app:fullnameText="@={viewModel.fullname}"
+                    app:layout_constraintEnd_toStartOf="@+id/guideline3"
+                    app:layout_constraintStart_toStartOf="@+id/textView11"
+                    app:layout_constraintTop_toBottomOf="@id/textView11" />
+
+
+                <TextView
+                    android:id="@+id/textView12"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:fontFamily="@font/roboto"
+                    android:text="Username"
+                    android:textSize="14sp"
+                    app:layout_constraintBaseline_toBaselineOf="@+id/textView11"
+                    app:layout_constraintStart_toStartOf="@+id/guideline3" />
+
+                <EditText
+                    android:id="@+id/settings_username"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginEnd="16dp"
+                    android:background="@drawable/textfield_bg"
+                    android:ems="10"
+                    android:inputType="textPersonName"
+                    android:padding="12dp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="@+id/textView12"
+                    app:layout_constraintTop_toBottomOf="@id/textView12"
+                    app:usernameText="@={viewModel.username}" />
+
+
+                <TextView
+                    android:id="@+id/textView13"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:fontFamily="@font/roboto"
+                    android:text="Email"
+                    android:textSize="14sp"
+                    app:layout_constraintStart_toStartOf="@+id/settings_fullname"
+                    app:layout_constraintTop_toBottomOf="@+id/settings_fullname" />
+
+                <EditText
+                    android:id="@+id/settings_email"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:background="@drawable/textfield_bg"
+                    android:clickable="false"
+                    android:ems="10"
+                    android:focusable="false"
+                    android:focusableInTouchMode="false"
+                    android:inputType="textEmailAddress"
+                    android:padding="12dp"
+                    app:emailText="@={viewModel.email}"
+                    app:layout_constraintEnd_toEndOf="@+id/settings_username"
+                    app:layout_constraintStart_toStartOf="@+id/textView13"
+                    app:layout_constraintTop_toBottomOf="@id/textView13" />
+
+
+                <TextView
+                    android:id="@+id/textView14"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:fontFamily="@font/roboto"
+                    android:text="Password"
+                    android:textSize="14sp"
+                    app:layout_constraintStart_toStartOf="@+id/settings_email"
+                    app:layout_constraintTop_toBottomOf="@+id/settings_email" />
+
+                <LinearLayout
+                    android:id="@+id/settings_password_layout"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginEnd="8dp"
+                    android:background="@drawable/textfield_bg"
+                    android:orientation="horizontal"
+                    android:weightSum="3"
+                    app:layout_constraintEnd_toStartOf="@+id/guideline3"
+                    app:layout_constraintStart_toStartOf="@+id/textView14"
+                    app:layout_constraintTop_toBottomOf="@+id/textView14">
+
+                    <EditText
+                        android:id="@+id/settings_password"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="3"
+                        android:background="@android:color/transparent"
+                        android:clickable="false"
+                        android:focusable="false"
+                        android:focusableInTouchMode="false"
+                        android:hint="Reset password"
+                        android:inputType="textPassword"
+                        android:onClick="@{() -> handler.resetPasswordClicked()}"
+                        android:padding="12dp" />
+
+                    <ImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginEnd="8dp"
+                        android:src="@drawable/ic_group_direct" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/textView15"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:fontFamily="@font/roboto"
+                    android:text="Date of birth\u002A"
+                    android:textSize="14sp"
+                    app:layout_constraintBaseline_toBaselineOf="@+id/textView14"
+                    app:layout_constraintStart_toStartOf="@+id/guideline3" />
+
+                <LinearLayout
+                    android:id="@+id/settins_birthdate_layout"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginEnd="16dp"
+                    android:background="@drawable/textfield_bg"
+                    android:orientation="horizontal"
+                    android:weightSum="1"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="@+id/textView15"
+                    app:layout_constraintTop_toBottomOf="@+id/textView15">
+
+                    <EditText
+                        android:id="@+id/editTextTextPersonName"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:background="@android:color/transparent"
+                        android:clickable="false"
+                        android:ems="10"
+                        android:focusable="false"
+                        android:focusableInTouchMode="false"
+                        android:hint="Choose"
+                        android:inputType="textPersonName"
+                        android:onClick="@{() -> handler.setBirthdateClicked()}"
+                        android:padding="12dp" />
+
+                    <ImageView
+                        android:id="@+id/imageView"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginEnd="8dp"
+                        app:srcCompat="@drawable/ic_group_direct" />
+                </LinearLayout>
+
+                <Button
+                    android:id="@+id/button"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="48dp"
+                    android:layout_marginTop="24dp"
+                    android:layout_marginEnd="48dp"
+                    android:layout_marginBottom="24dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/border_style2"
+                    android:fontFamily="@font/roboto_medium"
+                    android:onClick="@{() -> handler.updateProfileClicked()}"
+                    android:text="Update Profile"
+                    android:textColor="@android:color/white"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="@+id/settins_birthdate_layout"
+                    app:layout_constraintStart_toStartOf="@+id/settings_password_layout"
+                    app:layout_constraintTop_toBottomOf="@+id/settins_birthdate_layout" />
+
+                <androidx.constraintlayout.widget.Guideline
+                    android:id="@+id/guideline3"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    app:layout_constraintGuide_percent="0.5" />
+
+                <ProgressBar
+                    android:id="@+id/settings_progress"
+                    style="?android:attr/progressBarStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:visibleGone="@{processState}"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </ScrollView>
+    </LinearLayout>
+</layout>
+

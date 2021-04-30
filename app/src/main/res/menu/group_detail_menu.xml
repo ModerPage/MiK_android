@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/group_detail_menu_create_post"
+        android:icon="@drawable/ic_menu_add_24"
+        android:title="Create post" />
+    <item
+        android:id="@+id/group_detail_menu_report"
+        android:icon="@drawable/ic_nav_profile_helpfeed"
+        android:title="Report" />
+    <item
+        android:id="@+id/group_detail_menu_leave"
+        android:icon="@drawable/ic_nav_profile_logout"
+        android:title="Leave group" />
+    <item
+        android:id="@+id/group_detail_menu_del_leave"
+        android:icon="@drawable/ic_nav_profile_logout"
+        android:title="Delete and leave group" />
+</menu>

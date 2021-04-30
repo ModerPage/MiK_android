@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+        <import type="me.modernpage.util.Resource" />
+
+        <import type="me.modernpage.util.Status" />
+
+        <variable
+            name="loadingMore"
+            type="boolean" />
+
+        <variable
+            name="processState"
+            type="boolean" />
+
+        <variable
+            name="resultCount"
+            type="int" />
+
+        <variable
+            name="loadResource"
+            type="Resource" />
+
+        <variable
+            name="callback"
+            type="me.modernpage.ui.common.RetryCallback" />
+
+        <variable
+            name="user"
+            type="me.modernpage.data.local.entity.Profile" />
+
+        <variable
+            name="handler"
+            type="me.modernpage.ui.postdetail.PostDetailActivity.Handler" />
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#fff"
+        android:padding="8dp">
+
+        <androidx.fragment.app.FragmentContainerView
+            android:id="@+id/fragmentContainerView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+            android:id="@+id/post_detail_swipe_refresh"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginTop="8dp"
+            app:layout_constraintBottom_toTopOf="@+id/post_detail_load_more_bar"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/fragmentContainerView">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/post_detail_comment_recview"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+
+
+        </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
+        <include
+            layout="@layout/layout_loading_state"
+            android:layout_width="104dp"
+            android:layout_height="147dp"
+            app:callback="@{() -> callback.retry()}"
+            app:layout_constraintBottom_toBottomOf="@+id/post_detail_swipe_refresh"
+            app:layout_constraintEnd_toEndOf="@+id/post_detail_swipe_refresh"
+            app:layout_constraintStart_toStartOf="@+id/post_detail_swipe_refresh"
+            app:layout_constraintTop_toBottomOf="@+id/fragmentContainerView"
+            app:resource="@{loadResource}" />
+
+        <ProgressBar
+            android:id="@+id/post_detail_load_more_bar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:indeterminate="true"
+            app:layout_constraintBottom_toTopOf="@+id/post_detail_comment_owner_avatar"
+            app:visibleGone="@{loadingMore}"
+            tools:layout_editor_absoluteX="8dp" />
+
+        <EditText
+            android:id="@+id/post_detail_comment_edittext"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:background="@android:color/transparent"
+            android:ems="10"
+            android:hint="@string/post_detail_comment_hint"
+            android:inputType="textPersonName"
+            android:singleLine="true"
+            android:textSize="15sp"
+            app:layout_constraintBottom_toBottomOf="@+id/post_detail_comment_owner_avatar"
+            app:layout_constraintEnd_toStartOf="@+id/post_detail_send"
+            app:layout_constraintStart_toEndOf="@+id/post_detail_comment_owner_avatar"
+            app:layout_constraintTop_toTopOf="@+id/post_detail_comment_owner_avatar" />
+
+        <Button
+            android:id="@+id/post_detail_send"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/border_style2"
+            android:fontFamily="@font/roboto_medium"
+            android:text="@string/send"
+            android:textColor="#fff"
+            android:onClick="@{() -> handler.onAddComment()}"
+            app:layout_constraintBottom_toBottomOf="@+id/post_detail_comment_edittext"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/post_detail_comment_edittext" />
+
+        <de.hdodenhof.circleimageview.CircleImageView
+            android:id="@+id/post_detail_comment_owner_avatar"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:src="@drawable/placeholder"
+            app:setImageByUrl="@{user._avatar()}"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <ProgressBar
+            android:id="@+id/post_detail_progressbar"
+            style="?android:attr/progressBarStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:visibleGone="@{processState}" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

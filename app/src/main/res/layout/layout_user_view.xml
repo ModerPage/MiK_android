@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+        <variable
+            name="selected"
+            type="boolean" />
+
+        <variable
+            name="user"
+            type="me.modernpage.data.local.entity.Profile" />
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="8dp">
+
+        <FrameLayout
+            android:id="@+id/frameLayout2"
+            android:layout_width="54dp"
+            android:layout_height="54dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <de.hdodenhof.circleimageview.CircleImageView
+                android:id="@+id/user_view_avatar"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:setImageByUrl="@{user._avatar()}" />
+
+            <ImageView
+                android:id="@+id/user_view_tick"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom|right"
+                android:src="@drawable/ic_baseline_check_circle_green_24"
+                app:visibleGone="@{selected}" />
+        </FrameLayout>
+
+
+        <TextView
+            android:id="@+id/user_view_fullname"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:fontFamily="@font/roboto_medium"
+            android:text="@{user.fullname}"
+            android:textColor="@android:color/black"
+            app:layout_constraintBottom_toBottomOf="@+id/frameLayout2"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/frameLayout2"
+            app:layout_constraintTop_toTopOf="@+id/frameLayout2"
+            tools:text="Yusuf Murodov" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

@@ -1,170 +1,304 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context="me.modernpage.activity.SettingsActivity">
+    xmlns:tools="http://schemas.android.com/tools">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/settings_layout"
+    <data>
+
+        <variable
+            name="processState"
+            type="boolean" />
+
+        <variable
+            name="imageUrl"
+            type="String" />
+
+        <variable
+            name="handler"
+            type="me.modernpage.ui.settings.SettingsActivity.Handler" />
+
+        <variable
+            name="viewModel"
+            type="me.modernpage.ui.settings.SettingsViewModel" />
+    </data>
+
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
-        <ImageView
-            android:id="@+id/settings_image"
-            android:layout_width="match_parent"
-            android:layout_height="@dimen/appbar_header_height"
-            android:scaleType="fitCenter"
-            android:src="@drawable/placeholder"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/settings_add_photo"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_margin="@dimen/fab_margin"
-            android:layout_marginEnd="16dp"
-            android:backgroundTint="@color/primaryColor"
-            android:clickable="true"
-            android:focusable="true"
-            android:onClick="selectImage"
-            android:src="@drawable/ic_add_photo_white"
-            app:fabSize="normal"
-            app:layout_constraintBottom_toBottomOf="@+id/settings_image"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/settings_image" />
-
-        <View
-            android:id="@+id/divider"
-            android:layout_width="0dp"
-            android:layout_height="5dp"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="8dp"
-            android:layout_marginEnd="16dp"
-            android:background="?android:attr/listDivider"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/settings_add_photo" />
-
-        <TextView
-            android:id="@+id/textView4"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="8dp"
-            android:fontFamily="@font/roboto"
-            android:text="@string/personal_information"
-            android:textColor="@android:color/black"
-            android:textSize="16sp"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/divider" />
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/settings_fullname"
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/settings_toolbar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="8dp"
-            android:layout_marginEnd="16dp"
-            android:hint="@string/fullname"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/textView4">
+            app:layout_constraintTop_toTopOf="parent">
 
-            <com.google.android.material.textfield.TextInputEditText
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/settings_username"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:hint="@string/username"
-            app:layout_constraintEnd_toEndOf="@+id/settings_fullname"
-            app:layout_constraintStart_toStartOf="@+id/settings_fullname"
-            app:layout_constraintTop_toBottomOf="@id/settings_fullname">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/settings_password"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:hint="@string/password"
-            app:layout_constraintEnd_toEndOf="@+id/settings_username"
-            app:layout_constraintStart_toStartOf="@+id/settings_username"
-            app:layout_constraintTop_toBottomOf="@+id/settings_username"
-            app:passwordToggleEnabled="true">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:layout_width="match_parent"
+            <TextView
+                android:id="@+id/toolbar_title"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:fontFamily="@font/roboto_medium"
+                android:text="@string/settings"
+                android:textColor="@color/primaryDarkColor"
+                android:textSize="20sp" />
+        </androidx.appcompat.widget.Toolbar>
 
-                android:inputType="textPassword" />
-        </com.google.android.material.textfield.TextInputLayout>
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
 
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/settings_email"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:hint="@string/email"
-            app:layout_constraintEnd_toEndOf="@+id/settings_password"
-            app:layout_constraintStart_toStartOf="@+id/settings_password"
-            app:layout_constraintTop_toBottomOf="@+id/settings_password">
-
-            <com.google.android.material.textfield.TextInputEditText
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/settings_layout"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:enabled="false"
+                android:layout_height="wrap_content">
 
-                android:inputType="none" />
-        </com.google.android.material.textfield.TextInputLayout>
+                <FrameLayout
+                    android:id="@+id/frameLayout"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="24dp"
+                    android:onClick="@{() -> handler.uploadImageClicked()}"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent">
 
-        <TextView
-            android:id="@+id/textView6"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="Birthdate:"
-            android:textSize="16sp"
-            app:layout_constraintStart_toStartOf="@+id/settings_email"
-            app:layout_constraintTop_toBottomOf="@+id/settings_email" />
+                    <de.hdodenhof.circleimageview.CircleImageView
+                        android:id="@+id/settings_update_avatar"
+                        android:layout_width="125dp"
+                        android:layout_height="125dp"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintHorizontal_bias="0.5"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:setImageByUri="@{viewModel.uploadedImage}"
+                        app:setImageByUrl="@{viewModel.imageURL}"
+                        app:placeholder="@{@drawable/white_background}" />
 
-        <TextView
-            android:id="@+id/settings_birthdate"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:focusable="true"
-            android:clickable="true"
-            android:fontFamily="@font/roboto"
-            android:onClick="pickBirthdate"
-            android:text="@string/pick_a_birthdate"
-            android:textColor="@android:color/black"
-            android:textSize="16sp"
-            app:layout_constraintBaseline_toBaselineOf="@+id/textView6"
-            app:layout_constraintStart_toEndOf="@+id/textView6" />
+                    <de.hdodenhof.circleimageview.CircleImageView
+                        android:id="@+id/settings_avatar"
+                        android:layout_width="125dp"
+                        android:layout_height="125dp"
+                        android:src="@drawable/avatar_upload"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintHorizontal_bias="0.5"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
 
-        <Button
-            android:id="@+id/settings_save"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:background="@drawable/border_style2"
-            android:fontFamily="@font/roboto_medium"
-            android:onClick="saveSettings"
-            android:text="@string/save"
-            android:textColor="@android:color/white"
-            app:layout_constraintEnd_toEndOf="@+id/settings_email"
-            app:layout_constraintTop_toBottomOf="@+id/textView6" />
+                </FrameLayout>
 
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
-</ScrollView>
+                <TextView
+                    android:id="@+id/textView11"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="24dp"
+                    android:fontFamily="@font/roboto"
+                    android:text="Fullname"
+                    android:textSize="14sp"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/frameLayout" />
+
+                <EditText
+                    android:id="@+id/settings_fullname"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginEnd="16dp"
+                    android:background="@drawable/textfield_bg"
+                    android:inputType="textPersonName"
+                    android:padding="12dp"
+                    app:fullnameText="@={viewModel.fullname}"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="@+id/textView11"
+                    app:layout_constraintTop_toBottomOf="@id/textView11" />
+
+
+                <TextView
+                    android:id="@+id/textView12"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:fontFamily="@font/roboto"
+                    android:text="Username"
+                    android:textSize="14sp"
+                    app:layout_constraintStart_toStartOf="@+id/settings_fullname"
+                    app:layout_constraintTop_toBottomOf="@id/settings_fullname" />
+
+                <EditText
+                    android:id="@+id/settings_username"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:background="@drawable/textfield_bg"
+                    android:ems="10"
+                    android:inputType="textPersonName"
+                    android:padding="12dp"
+                    app:layout_constraintEnd_toEndOf="@+id/settings_fullname"
+                    app:layout_constraintStart_toStartOf="@+id/textView12"
+                    app:layout_constraintTop_toBottomOf="@id/textView12"
+                    app:usernameText="@={viewModel.username}" />
+
+
+                <TextView
+                    android:id="@+id/textView13"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:fontFamily="@font/roboto"
+                    android:text="Email"
+                    android:textSize="14sp"
+                    app:layout_constraintStart_toStartOf="@+id/settings_username"
+                    app:layout_constraintTop_toBottomOf="@id/settings_username" />
+
+                <EditText
+                    android:id="@+id/settings_email"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:background="@drawable/textfield_bg"
+                    android:clickable="false"
+                    android:ems="10"
+                    android:focusable="false"
+                    android:focusableInTouchMode="false"
+                    android:inputType="textEmailAddress"
+                    android:padding="12dp"
+                    app:emailText="@={viewModel.email}"
+                    app:layout_constraintEnd_toEndOf="@+id/settings_username"
+                    app:layout_constraintStart_toStartOf="@+id/textView13"
+                    app:layout_constraintTop_toBottomOf="@id/textView13" />
+
+
+                <TextView
+                    android:id="@+id/textView14"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:fontFamily="@font/roboto"
+                    android:text="Password"
+                    android:textSize="14sp"
+                    app:layout_constraintStart_toStartOf="@+id/settings_email"
+                    app:layout_constraintTop_toBottomOf="@+id/settings_email" />
+
+                <LinearLayout
+                    android:id="@+id/settings_password_layout"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:background="@drawable/textfield_bg"
+                    android:orientation="horizontal"
+                    android:weightSum="3"
+                    app:layout_constraintEnd_toEndOf="@+id/settings_email"
+                    app:layout_constraintStart_toStartOf="@+id/textView14"
+                    app:layout_constraintTop_toBottomOf="@+id/textView14">
+
+                    <EditText
+                        android:id="@+id/settings_password"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="3"
+                        android:background="@android:color/transparent"
+                        android:clickable="false"
+                        android:focusable="false"
+                        android:focusableInTouchMode="false"
+                        android:hint="Reset password"
+                        android:inputType="textPassword"
+                        android:onClick="@{() -> handler.resetPasswordClicked()}"
+                        android:padding="12dp" />
+
+                    <ImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginEnd="8dp"
+                        android:src="@drawable/ic_group_direct" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/textView15"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:fontFamily="@font/roboto"
+                    android:text="Date of birth\u002A"
+                    android:textSize="14sp"
+                    app:layout_constraintStart_toStartOf="@+id/settings_password_layout"
+                    app:layout_constraintTop_toBottomOf="@+id/settings_password_layout" />
+
+                <LinearLayout
+                    android:id="@+id/settins_birthdate_layout"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:background="@drawable/textfield_bg"
+                    android:orientation="horizontal"
+                    android:weightSum="1"
+                    app:layout_constraintEnd_toEndOf="@+id/settings_password_layout"
+                    app:layout_constraintStart_toStartOf="@+id/textView15"
+                    app:layout_constraintTop_toBottomOf="@+id/textView15">
+
+                    <EditText
+                        android:id="@+id/editTextTextPersonName"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:background="@android:color/transparent"
+                        android:clickable="false"
+                        android:ems="10"
+                        android:focusable="false"
+                        android:focusableInTouchMode="false"
+                        android:hint="Choose"
+                        android:inputType="textPersonName"
+                        android:onClick="@{() -> handler.setBirthdateClicked()}"
+                        android:padding="12dp" />
+
+                    <ImageView
+                        android:id="@+id/imageView"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginEnd="8dp"
+                        app:srcCompat="@drawable/ic_group_direct" />
+                </LinearLayout>
+
+                <Button
+                    android:id="@+id/button"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="32dp"
+                    android:layout_marginTop="24dp"
+                    android:layout_marginEnd="32dp"
+                    android:layout_marginBottom="24dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/border_style2"
+                    android:fontFamily="@font/roboto_medium"
+                    android:onClick="@{() -> handler.updateProfileClicked()}"
+                    android:text="Update Profile"
+                    android:textColor="@android:color/white"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="@+id/settins_birthdate_layout"
+                    app:layout_constraintStart_toStartOf="@+id/settins_birthdate_layout"
+                    app:layout_constraintTop_toBottomOf="@+id/settins_birthdate_layout" />
+
+                <ProgressBar
+                    android:id="@+id/settings_progress"
+                    style="?android:attr/progressBarStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:visibleGone="@{processState}"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </ScrollView>
+    </LinearLayout>
+</layout>
+

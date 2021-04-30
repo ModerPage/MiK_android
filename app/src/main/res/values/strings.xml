@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Make It Known</string>
+    <string name="app_name">MiK</string>
     <string name="mik">MiK</string>
     <string name="username">username</string>
     <string name="password">password</string>
@@ -39,17 +39,38 @@
     <string name="post_content_hint">What\'s on your mind?</string>
     <string name="enter_address_city_or_zip_code">Enter Address, City or Zip Code</string>
     <string name="submit">Submit</string>
-    <string name="userpost_like_text">Like</string>
-    <string name="userpost_comment_text">Comment</string>
-    <string name="userpost_share_text">Share</string>
+    <string name="post_like_text">Like</string>
+    <string name="post_comment_text">Comment</string>
+    <string name="post_share_text">Share</string>
+    <string name="post_group_name">\u0020‣\u0020%s</string>
 
     <!--\u0020 is for adding blank space -->
-    <string name="comment_counter_suffix_singular">\u0020Comment</string>
-    <string name="comment_counter_suffix_plural">\u0020Comments</string>
-    <string name="comment_counter_suffix_kplural">K\u0020Comments</string>
+    <string name="comment_counter_singular">%d\u0020Comment</string>
+    <string name="comment_counter_plural">%d\u0020Comments</string>
+    <string name="comment_counter_kplural">%dK\u0020Comments</string>
 
-    <string name="like_counter_suffix_singular">\u0020Like</string>
-    <string name="like_counter_suffix_plural">\u0020Likes</string>
-    <string name="like_counter_suffix_kplural">K\u0020Likes</string>
+    <string name="group_counter_singular">%d\u0020member</string>
+    <string name="group_counter_plural">%d\u0020members</string>
+    <string name="group_counter_kplural">%dK\u0020members</string>
+
+    <string name="like_counter_singular">%d\u0020Like</string>
+    <string name="like_counter_plural">%d\u0020Likes</string>
+    <string name="like_counter_kplural">%dK\u0020Likes</string>
     <string name="post_detail_comment_hint">Write a comment...</string>
+    <string name="ok">OK</string>
+    <string name="cancel" />
+    <string name="email_input_positive_caption">Next</string>
+    <string name="email_input_negaitve_caption">Cancel</string>
+    <string name="new_password">new password</string>
+    <string name="reset_password_positive_caption">Save</string>
+    <string name="reset_password_negative_caption">Cancel</string>
+
+    <string name="unknown_error">Unknown Error</string>
+    <string name="empty_load_result">No contents found</string>
+    <string name="retry">Retry</string>
+    <string name="cancelEditDiag_message">You have unsaved changes. Do you want to discard changes, or continue editing?</string>
+    <string name="cancelEditDiag_positive_caption">Continue editing</string>
+    <string name="cancelEditDiag_negative_caption">Discard changes</string>
+    <string name="JoinGroupDiag_Positive_Caption">Join</string>
+    <string name="JoinGroupDiag_Negative_Caption">Cancel</string>
 </resources>

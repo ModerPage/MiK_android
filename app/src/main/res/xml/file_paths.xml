@@ -1,11 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <paths xmlns:android="http://schemas.android.com/apk/res/android">
     <external-path
-        name="captured_image"
-        path="DCIM/" />
-    <!--    <external-files-path-->
-    <!--        name="images"-->
-    <!--        path="Pictures"/>-->
+        name="avatar_image"
+        path="mik_avatar/" />
+
+    <external-path
+        name="group_image"
+        path="mik_group_image/" />
+
+    <external-path
+        name="post_image"
+        path="mik_post_image" />
+
+    <external-path
+        name="post_video"
+        path="mik_post_video" />
+
     <external-cache-path
         name="images"
         path="Pictures" />

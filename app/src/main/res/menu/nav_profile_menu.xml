@@ -19,7 +19,7 @@
             android:id="@+id/nav_profile_posts"
             android:icon="@drawable/ic_nav_profile_posts"
             android:title="@string/posts"
-            app:actionViewClass="android.widget.TextView"/>
+            app:actionViewClass="android.widget.TextView" />
         <item
             android:id="@+id/nav_profile_settings"
             android:icon="@drawable/ic_nav_profile_settings"
@@ -28,5 +28,9 @@
             android:id="@+id/nav_profile_helpfeed"
             android:icon="@drawable/ic_nav_profile_helpfeed"
             android:title="@string/help_feedback" />
+        <item
+            android:id="@+id/nav_profile_logout"
+            android:icon="@drawable/ic_nav_profile_logout"
+            android:title="@string/log_out" />
     </group>
 </menu>

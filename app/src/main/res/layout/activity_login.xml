@@ -1,139 +1,187 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/login_layout"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@android:color/white"
-    tools:activity=".LoginActivity">
+    xmlns:tools="http://schemas.android.com/tools">
 
+    <data>
 
-    <TextView
-        android:id="@+id/textView3"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="32dp"
-        android:layout_marginTop="64dp"
-        android:layout_marginEnd="32dp"
-        android:fontFamily="@font/roboto_bold"
-        android:text="@string/mik"
-        android:textAlignment="center"
-        android:textColor="@color/primaryDarkColor"
-        android:textSize="36sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        <import type="android.view.View" />
 
+        <variable
+            name="processState"
+            type="boolean" />
 
-    <EditText
-        android:id="@+id/login_username"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="32dp"
-        android:background="@drawable/textfield_bg"
-        android:ems="10"
-        android:hint="@string/username"
-        android:inputType="textPersonName"
-        android:padding="12dp"
-        app:layout_constraintEnd_toEndOf="@+id/textView3"
-        app:layout_constraintStart_toStartOf="@+id/textView3"
-        app:layout_constraintTop_toBottomOf="@+id/textView3" />
+        <variable
+            name="loginViewModel"
+            type="me.modernpage.ui.login.LoginViewModel" />
 
-    <EditText
-        android:id="@+id/login_password"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:background="@drawable/textfield_bg"
-        android:ems="10"
-        android:hint="@string/password"
-        android:inputType="textPassword"
-        android:padding="12dp"
-        app:layout_constraintEnd_toEndOf="@+id/login_username"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="@+id/login_username"
-        app:layout_constraintTop_toBottomOf="@+id/login_username" />
+        <variable
+            name="handler"
+            type="me.modernpage.ui.login.LoginActivity.Handler" />
+    </data>
 
-    <CheckBox
-        android:id="@+id/login_checkbox"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:buttonTint="@color/primaryLightColor"
-        android:onClick="rememberCheck"
-        app:layout_constraintBaseline_toBaselineOf="@+id/login_forgot"
-        app:layout_constraintStart_toStartOf="@+id/login_password" />
-
-    <TextView
-        android:id="@+id/nav_header_fullname"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:clickable="true"
-        android:focusable="true"
-        android:fontFamily="@font/roboto_bold"
-        android:onClick="rememberCheck"
-        android:text="@string/remember_me"
-        app:layout_constraintBottom_toBottomOf="@+id/login_checkbox"
-        app:layout_constraintStart_toEndOf="@+id/login_checkbox"
-        app:layout_constraintTop_toTopOf="@+id/login_checkbox" />
-
-    <TextView
-        android:id="@+id/login_forgot"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:clickable="true"
-        android:focusable="true"
-        android:fontFamily="@font/roboto_bold"
-        android:text="@string/forgot_password"
-        app:layout_constraintEnd_toEndOf="@+id/login_password"
-        app:layout_constraintTop_toBottomOf="@+id/login_password" />
-
-
-    <LinearLayout
-        android:id="@+id/login_linlayout"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:orientation="horizontal"
-        app:layout_constraintEnd_toEndOf="@+id/login_signin"
-        app:layout_constraintStart_toStartOf="@+id/login_signin"
-        app:layout_constraintTop_toBottomOf="@id/login_signin">
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@android:color/white">
 
         <TextView
+            android:id="@+id/textView3"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="32dp"
+            android:layout_marginTop="64dp"
+            android:layout_marginEnd="32dp"
+            android:fontFamily="@font/roboto_bold"
+            android:text="@string/mik"
+            android:textAlignment="center"
+            android:textColor="@color/primaryDarkColor"
+            android:textSize="36sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+
+        <EditText
+            android:id="@+id/login_username"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/textfield_bg"
+            android:ems="10"
+            android:inputType="textPersonName"
+            android:padding="12dp"
+            app:layout_constraintEnd_toEndOf="@+id/textView3"
+            app:layout_constraintStart_toStartOf="@+id/textView24"
+            app:layout_constraintTop_toBottomOf="@+id/textView24"
+            app:usernameText="@={loginViewModel.username}" />
+
+        <EditText
+            android:id="@+id/login_password"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/textfield_bg"
+            android:ems="10"
+            android:inputType="textPassword"
+            android:padding="12dp"
+            app:layout_constraintEnd_toEndOf="@+id/login_username"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="@+id/textView25"
+            app:layout_constraintTop_toBottomOf="@+id/textView25"
+            app:passwordText="@={loginViewModel.password}" />
+
+        <CheckBox
+            android:id="@+id/login_checkbox"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-
-            android:fontFamily="@font/roboto_medium"
-            android:text="@string/don_t_have_an_account" />
+            android:buttonTint="@color/primaryLightColor"
+            android:checked="@={loginViewModel.rememberMe}"
+            app:layout_constraintBaseline_toBaselineOf="@+id/login_forgot"
+            app:layout_constraintStart_toStartOf="@+id/login_password" />
 
         <TextView
-            android:id="@+id/login_signup"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_marginStart="4dp"
-            android:layout_marginLeft="4dp"
-            android:layout_weight="1"
+            android:id="@+id/nav_header_fullname"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:focusable="false"
             android:fontFamily="@font/roboto_bold"
-            android:onClick="goToSignup"
-            android:text="@string/sign_up"
-            android:textColor="@color/primaryLightColor" />
+            android:text="@string/remember_me"
+            app:layout_constraintBottom_toBottomOf="@+id/login_checkbox"
+            app:layout_constraintStart_toEndOf="@+id/login_checkbox"
+            app:layout_constraintTop_toTopOf="@+id/login_checkbox" />
 
-    </LinearLayout>
+        <TextView
+            android:id="@+id/login_forgot"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:onClick="@{() -> handler.onForgetPassword()}"
+            android:fontFamily="@font/roboto_bold"
+            android:text="@string/forgot_password"
+            app:layout_constraintEnd_toEndOf="@+id/login_password"
+            app:layout_constraintTop_toBottomOf="@+id/login_password" />
 
-    <Button
-        android:id="@+id/login_signin"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:background="@drawable/border_style2"
-        android:fontFamily="@font/roboto_medium"
-        android:paddingStart="30dp"
-        android:paddingEnd="30dp"
-        android:text="@string/sign_in"
-        android:textColor="@android:color/white"
-        app:layout_constraintEnd_toEndOf="@+id/login_forgot"
-        app:layout_constraintStart_toStartOf="@+id/login_checkbox"
-        app:layout_constraintTop_toBottomOf="@+id/login_forgot" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+        <LinearLayout
+            android:id="@+id/login_linlayout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:orientation="horizontal"
+            app:layout_constraintEnd_toEndOf="@+id/login_signin"
+            app:layout_constraintStart_toStartOf="@+id/login_signin"
+            app:layout_constraintTop_toBottomOf="@id/login_signin">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:focusable="false"
+                android:fontFamily="@font/roboto_medium"
+                android:text="@string/don_t_have_an_account" />
+
+            <TextView
+                android:id="@+id/login_signup"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="4dp"
+                android:layout_weight="1"
+                android:fontFamily="@font/roboto_bold"
+                android:onClick="@{()-> handler.onRegister()}"
+                android:text="@string/sign_up"
+                android:textColor="@color/primaryLightColor" />
+
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/login_signin"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/border_style2"
+            android:fontFamily="@font/roboto_medium"
+            android:paddingStart="30dp"
+            android:paddingEnd="30dp"
+            android:text="@string/sign_in"
+            android:onClick="@{() -> handler.onLogin()}"
+            android:textColor="@android:color/white"
+            app:layout_constraintEnd_toEndOf="@+id/login_forgot"
+            app:layout_constraintStart_toStartOf="@+id/login_checkbox"
+            app:layout_constraintTop_toBottomOf="@+id/login_forgot" />
+
+        <ProgressBar
+            android:id="@+id/login_progressBar"
+            style="?android:attr/progressBarStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:visibleGone="@{processState}"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/textView24"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:fontFamily="@font/roboto"
+            android:text="Username"
+            app:layout_constraintStart_toStartOf="@+id/textView3"
+            app:layout_constraintTop_toBottomOf="@+id/textView3" />
+
+        <TextView
+            android:id="@+id/textView25"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:fontFamily="@font/roboto"
+            android:text="Password"
+            app:layout_constraintStart_toStartOf="@+id/login_username"
+            app:layout_constraintTop_toBottomOf="@+id/login_username" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</layout>

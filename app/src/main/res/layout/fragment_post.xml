@@ -1,134 +1,208 @@
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context="me.modernpage.fragment.post.PostFragment">
+    xmlns:tools="http://schemas.android.com/tools">
 
-    <de.hdodenhof.circleimageview.CircleImageView
-        android:id="@+id/post_avatar"
-        android:layout_width="64dp"
-        android:layout_height="64dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="24dp"
-        android:src="@drawable/placeholder"
-        android:visibility="visible"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+    <data>
 
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="8dp"
-        android:orientation="vertical"
-        app:layout_constraintBottom_toBottomOf="@+id/post_avatar"
-        app:layout_constraintLeft_toRightOf="@id/post_avatar"
-        app:layout_constraintTop_toTopOf="@+id/post_avatar">
+        <import type="me.modernpage.ui.fragment.post.PostFragment.FragmentEditMode" />
 
-        <TextView
-            android:id="@+id/post_fullname"
+        <import type="java.util.List" />
+
+        <import type="me.modernpage.data.local.entity.Group" />
+
+        <variable
+            name="processState"
+            type="boolean" />
+
+        <variable
+            name="editMode"
+            type="FragmentEditMode" />
+
+        <variable
+            name="user"
+            type="me.modernpage.data.local.entity.Profile" />
+
+        <variable
+            name="handler"
+            type="me.modernpage.ui.fragment.post.PostFragment.Handler" />
+
+        <variable
+            name="viewModel"
+            type="me.modernpage.ui.fragment.post.PostFragmentViewModel" />
+
+        <variable
+            name="groups"
+            type="List&lt;Group>" />
+
+        <variable
+            name="fileUrl"
+            type="String" />
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context=".fragment.post.PostFragment">
+
+        <de.hdodenhof.circleimageview.CircleImageView
+            android:id="@+id/post_avatar"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:src="@drawable/placeholder"
+            android:visibility="visible"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:setImageByUrl="@{user._avatar}" />
+
+        <LinearLayout
+            android:id="@+id/constraintLayout"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="16dp"
+            android:orientation="vertical"
+            app:layout_constraintBottom_toBottomOf="@+id/post_avatar"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/post_avatar"
+            app:layout_constraintTop_toTopOf="@+id/post_avatar">
+
+            <TextView
+                android:id="@+id/post_fullname"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/roboto_medium"
+                android:text="@{user.fullname}"
+                android:textColor="@android:color/black"
+                android:textSize="18sp"
+                android:visibility="visible" />
+
+            <Spinner
+                android:id="@+id/post_group_list"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:entries="@{groups}"
+                app:newValue="@={viewModel.groupIndex}" />
+        </LinearLayout>
+
+        <EditText
+            android:id="@+id/post_content"
+            android:layout_width="0dp"
+            android:layout_height="150dp"
+            android:layout_marginTop="16dp"
+            android:ems="10"
+            android:focusableInTouchMode="true"
+            android:gravity="top|left"
+            android:hint="@string/post_content_hint"
+            android:inputType="textMultiLine|textPersonName"
+            android:maxLength="200"
+            android:scrollbars="vertical"
+            android:text="@={viewModel.text}"
+            app:layout_constraintEnd_toEndOf="@+id/constraintLayout"
+            app:layout_constraintStart_toStartOf="@+id/post_avatar"
+            app:layout_constraintTop_toBottomOf="@+id/post_avatar" />
+
+        <LinearLayout
+            android:id="@+id/file_container"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/dashed_border"
+            android:onClick="@{() -> handler.onAddFileClicked()}"
+            android:orientation="vertical"
+            app:layout_constraintStart_toStartOf="@+id/post_content"
+            app:layout_constraintTop_toBottomOf="@id/post_content">
+
+            <ImageView
+                android:id="@+id/post_file"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="0dp"
+                android:scaleType="centerCrop"
+                app:setImageByUrl="@{fileUrl}"
+                android:src="@{@drawable/add_file_image}"
+                app:setFile="@{viewModel.file}"
+                app:placeholder="@{@drawable/add_file_image}" />
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/post_add_photo"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:fontFamily="@font/roboto_medium"
-            android:textColor="@android:color/black"
-            android:textSize="18sp"
-            android:visibility="visible"
-            tools:text="@string/fullname" />
+            android:layout_marginTop="24dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:onClick="@{() -> handler.onAddImageClicked()}"
+            android:src="@drawable/ic_add_photo_black"
+            app:layout_constraintStart_toStartOf="@+id/file_container"
+            app:layout_constraintTop_toBottomOf="@+id/file_container" />
 
-        <Spinner
-            android:id="@+id/post_group_list"
+        <ImageView
+            android:id="@+id/post_add_video"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-    </LinearLayout>
+            android:layout_height="wrap_content"
+            android:layout_marginStart="24dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:onClick="@{() -> handler.onAddVideoClicked()}"
+            android:src="@drawable/ic_add_video"
+            app:layout_constraintBottom_toBottomOf="@+id/post_add_photo"
+            app:layout_constraintStart_toEndOf="@+id/post_add_photo"
+            app:layout_constraintTop_toTopOf="@+id/post_add_photo" />
 
-    <EditText
-        android:id="@+id/post_content"
-        android:layout_width="0dp"
-        android:layout_height="200dp"
-        android:layout_marginTop="24dp"
-        android:layout_marginEnd="16dp"
-        android:ems="10"
-        android:focusableInTouchMode="true"
-        android:gravity="top|left"
-        android:hint="@string/post_content_hint"
-        android:inputType="textMultiLine|textPersonName"
-        android:maxLength="200"
-        android:scrollbars="vertical"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="@+id/post_avatar"
-        app:layout_constraintTop_toBottomOf="@+id/post_avatar" />
+        <ImageView
+            android:id="@+id/post_add_location"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="24dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:onClick="@{() -> handler.onAddLocationClicked()}"
+            android:src="@drawable/ic_add_location_"
+            app:layout_constraintBottom_toBottomOf="@+id/post_add_video"
+            app:layout_constraintStart_toEndOf="@+id/post_add_video"
+            app:layout_constraintTop_toTopOf="@+id/post_add_video" />
 
-    <LinearLayout
-        android:id="@+id/file_container"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:orientation="horizontal"
-        app:layout_constraintStart_toStartOf="@+id/post_content"
-        app:layout_constraintTop_toBottomOf="@id/post_content">
+        <Button
+            android:id="@+id/post_post"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="24dp"
+            android:layout_marginEnd="16dp"
+            android:background="@drawable/border_style2"
+            android:fontFamily="@font/roboto_medium"
+            android:text="@{editMode == FragmentEditMode.ADD ? @string/post : @string/save}"
+            android:onClick="@{() -> handler.onPostClicked()}"
+            android:textColor="@android:color/white"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/post_add_photo" />
 
-    </LinearLayout>
+        <TextView
+            android:id="@+id/post_location"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:ellipsize="end"
+            android:fontFamily="@font/roboto"
+            app:layout_constraintBottom_toBottomOf="@+id/post_add_location"
+            app:layout_constraintEnd_toEndOf="@+id/post_content"
+            app:layout_constraintStart_toEndOf="@+id/post_add_location"
+            app:layout_constraintTop_toTopOf="@+id/post_add_location"
+            android:text="@{viewModel.location.addressLine}" />
 
-    <ImageView
-        android:id="@+id/post_add_photo"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:clickable="true"
-        android:focusable="true"
-        android:src="@drawable/ic_add_photo_black"
-        app:layout_constraintStart_toStartOf="@+id/file_container"
-        app:layout_constraintTop_toBottomOf="@+id/file_container" />
+        <ProgressBar
+            android:id="@+id/post_progressBar"
+            style="?android:attr/progressBarStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:visibleGone="@{processState}"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-    <ImageView
-        android:id="@+id/post_add_video"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:clickable="true"
-        android:focusable="true"
-        android:src="@drawable/ic_add_video"
-        app:layout_constraintBottom_toBottomOf="@+id/post_add_photo"
-        app:layout_constraintStart_toEndOf="@+id/post_add_photo"
-        app:layout_constraintTop_toTopOf="@+id/post_add_photo" />
-
-    <ImageView
-        android:id="@+id/post_add_location"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:clickable="true"
-        android:focusable="true"
-        android:src="@drawable/ic_add_location_"
-        app:layout_constraintBottom_toBottomOf="@+id/post_add_video"
-        app:layout_constraintStart_toEndOf="@+id/post_add_video"
-        app:layout_constraintTop_toTopOf="@+id/post_add_video" />
-
-    <Button
-        android:id="@+id/post_post"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="16dp"
-        android:background="@drawable/border_style2"
-        android:fontFamily="@font/roboto_medium"
-        android:text="@string/post"
-        android:textColor="@android:color/white"
-        app:layout_constraintBottom_toBottomOf="@+id/post_location"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/post_location" />
-
-    <TextView
-        android:id="@+id/post_location"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginEnd="16dp"
-        android:ellipsize="end"
-        android:fontFamily="@font/roboto"
-        app:layout_constraintBottom_toBottomOf="@+id/post_add_location"
-        app:layout_constraintEnd_toStartOf="@+id/post_post"
-        app:layout_constraintStart_toEndOf="@+id/post_add_location"
-        app:layout_constraintTop_toTopOf="@+id/post_add_location"
-        tools:text="location" />
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

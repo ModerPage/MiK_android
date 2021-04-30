@@ -1,71 +1,88 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content">
+<layout>
 
-    <de.hdodenhof.circleimageview.CircleImageView
-        android:id="@+id/comment_view_avatar"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
-        android:src="@drawable/placeholder"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+    <data>
 
-    <LinearLayout
-        android:id="@+id/linearLayout"
+        <variable
+            name="uid"
+            type="long" />
+
+        <variable
+            name="comment"
+            type="me.modernpage.data.local.entity.relation.CommentRelation" />
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginEnd="8dp"
-        android:background="@drawable/comment_view_background"
-        android:orientation="vertical"
-        android:padding="8dp"
-        android:weightSum="3"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toEndOf="@+id/comment_view_avatar"
-        app:layout_constraintTop_toTopOf="@+id/comment_view_avatar">
+        android:layout_height="wrap_content">
+
+        <de.hdodenhof.circleimageview.CircleImageView
+            android:id="@+id/comment_view_avatar"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:src="@drawable/placeholder"
+            app:setImageByUrl="@{comment.owner._avatar()}"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <LinearLayout
+            android:id="@+id/linearLayout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:background="@drawable/comment_view_background"
+            android:orientation="vertical"
+            android:padding="8dp"
+            android:weightSum="3"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toEndOf="@+id/comment_view_avatar"
+            app:layout_constraintTop_toTopOf="@+id/comment_view_avatar">
+
+            <TextView
+                android:id="@+id/comment_view_owner_fullname"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/roboto_bold"
+                android:text="@{comment.owner.fullname}"
+                android:textColor="@android:color/black"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/comment_view_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/roboto"
+                android:text="@{comment.comment.text}"
+                android:textColor="@android:color/black" />
+        </LinearLayout>
 
         <TextView
-            android:id="@+id/comment_view_owner_fullname"
-            android:layout_width="match_parent"
+            android:id="@+id/comment_view_time"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:fontFamily="@font/roboto_bold"
-            android:text="TextView"
-            android:textColor="@android:color/black"
-            android:textSize="12sp" />
-
-        <TextView
-            android:id="@+id/comment_view_text"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
             android:fontFamily="@font/roboto"
-            android:text="TextView"
-            android:textColor="@android:color/black" />
-    </LinearLayout>
+            app:setDate="@{comment.comment.created}"
+            app:layout_constraintStart_toStartOf="@+id/linearLayout"
+            app:layout_constraintTop_toBottomOf="@+id/linearLayout"
+            tools:text="3 hrs" />
 
-    <TextView
-        android:id="@+id/comment_view_time"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:fontFamily="@font/roboto"
-        app:layout_constraintStart_toStartOf="@+id/linearLayout"
-        app:layout_constraintTop_toBottomOf="@+id/linearLayout"
-        tools:text="3 hrs" />
+        <TextView
+            android:id="@+id/comment_view_delete"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:fontFamily="@font/roboto_bold"
+            android:text="Delete"
+            app:visibleGone="@{uid == comment.owner.id}"
+            app:layout_constraintBaseline_toBaselineOf="@+id/comment_view_time"
+            app:layout_constraintStart_toEndOf="@+id/comment_view_time" />
 
-    <TextView
-        android:id="@+id/comment_view_delete"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:fontFamily="@font/roboto_bold"
-        android:text="Delete"
-        app:layout_constraintBaseline_toBaselineOf="@+id/comment_view_time"
-        app:layout_constraintStart_toEndOf="@+id/comment_view_time" />
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

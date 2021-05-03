@@ -7,10 +7,10 @@ import me.modernpage.data.local.entity.Profile;
 import me.modernpage.data.remote.ApiResponse;
 import me.modernpage.data.remote.model.AccountInfo;
 import me.modernpage.data.remote.model.AuthResponse;
-import me.modernpage.data.remote.model.response.FollowerLoadResponse;
 import me.modernpage.data.remote.model.LoginRequest;
 import me.modernpage.data.remote.model.PasswordRequest;
 import me.modernpage.data.remote.model.RegisterRequest;
+import me.modernpage.data.remote.model.response.FollowerLoadResponse;
 import me.modernpage.data.remote.model.response.UserLoadResponse;
 import me.modernpage.util.ResponseUtil;
 import okhttp3.MultipartBody;
@@ -93,4 +93,12 @@ public interface UserResource {
 
     @GET
     Call<ResponseUtil<UserLoadResponse>> users(String url);
+
+    @GET("register/validate/username")
+    @Headers("No-Authentication: true")
+    Call<ResponseUtil<Boolean>> validateUsername(@Query("username") String username);
+
+    @GET("register/validate/email")
+    @Headers("No-Authentication: true")
+    Call<ResponseUtil<Boolean>> validateEmail(@Query("email") String email);
 }

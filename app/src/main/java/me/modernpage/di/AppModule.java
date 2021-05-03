@@ -14,6 +14,7 @@ import com.tinder.scarlet.lifecycle.android.AndroidLifecycle;
 
 import java.text.SimpleDateFormat;
 import java.util.Locale;
+import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Singleton;
@@ -88,9 +89,11 @@ public class AppModule {
     @Provides
     @Singleton
     Gson provideGson() {
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat(Constants.DATE_FORMAT_PATTERN,
+                Locale.getDefault());
+        simpleDateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
         return new GsonBuilder()
-                .setDateFormat(new SimpleDateFormat(Constants.DATE_FORMAT_PATTERN,
-                        Locale.getDefault()).toPattern())
+                .setDateFormat(simpleDateFormat.toPattern())
                 .create();
     }
 

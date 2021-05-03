@@ -129,4 +129,5 @@ dependencies {
 
     implementation 'com.borjabravo:readmoretextview:2.1.0'
 
+    implementation 'joda-time:joda-time:2.10.10'
 }

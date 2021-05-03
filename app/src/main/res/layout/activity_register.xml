@@ -27,6 +27,13 @@
             name="confirmOnTextChanged"
             type="me.modernpage.databinding.ChangePasswordAdapter.ConfirmOnTextChanged" />
 
+        <variable
+            name="usernameTextChanged"
+            type="me.modernpage.databinding.TextBindingAdapter.OnTextChanged" />
+
+        <variable
+            name="emailTextChanged"
+            type="me.modernpage.databinding.TextBindingAdapter.OnTextChanged" />
     </data>
 
     <ScrollView
@@ -74,10 +81,10 @@
                 android:ems="10"
                 android:inputType="text"
                 android:padding="12dp"
+                android:onTextChanged="@{usernameTextChanged::onTextChanged}"
                 app:layout_constraintEnd_toEndOf="@+id/textView3"
                 app:layout_constraintStart_toStartOf="@+id/textView17"
-                app:layout_constraintTop_toBottomOf="@+id/textView17"
-                app:usernameText="@={viewModel.username}" />
+                app:layout_constraintTop_toBottomOf="@+id/textView17" />
 
             <TextView
                 android:id="@+id/textView18"
@@ -121,8 +128,8 @@
                 android:background="@drawable/textfield_bg"
                 android:ems="10"
                 android:inputType="textEmailAddress"
+                android:onTextChanged="@{emailTextChanged::onTextChanged}"
                 android:padding="12dp"
-                app:emailText="@={viewModel.email}"
                 app:layout_constraintEnd_toEndOf="@+id/register_fullname"
                 app:layout_constraintStart_toStartOf="@+id/textView19"
                 app:layout_constraintTop_toBottomOf="@+id/textView19" />

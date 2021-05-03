@@ -1,11 +1,14 @@
 package me.modernpage.ui.register;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
 
+import androidx.core.content.ContextCompat;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.google.android.material.snackbar.Snackbar;
+import com.google.common.base.Strings;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -20,13 +23,14 @@ import me.modernpage.util.Constants;
 @AndroidEntryPoint
 public class RegisterActivity extends BaseActivity<ActivityRegisterBinding>
         implements ChangePasswordAdapter.NewAfterTextChanged, ChangePasswordAdapter.ConfirmOnTextChanged {
-
+    private static final String TAG = "RegisterActivity";
     RegisterViewModel mRegisterViewModel;
 
     @Override
     public int getLayoutRes() {
         return R.layout.activity_register;
     }
+
 
     public interface Handler {
         void onRegister();
@@ -42,6 +46,36 @@ public class RegisterActivity extends BaseActivity<ActivityRegisterBinding>
         dataBinding.setHandler(mHandler);
         dataBinding.setConfirmOnTextChanged(this);
         dataBinding.setNewAfterTextChanged(this);
+        dataBinding.setUsernameTextChanged((s, start, before, count) -> {
+            dataBinding.registerUsername.setBackground(
+                    ContextCompat.getDrawable(this, R.drawable.textfield_bg));
+            if (Strings.isNullOrEmpty(s.toString())) {
+                dataBinding.registerUsername
+                        .setError("This field can't be blank");
+            }
+            if (isNotValid(s.toString(), Constants.Regex.USERNAME)) {
+                dataBinding.registerUsername
+                        .setError("Username must be 6~15 characters long and can contain \".\" \"_\" chars");
+                return;
+            }
+            mRegisterViewModel.checkUsername(s.toString());
+        });
+
+        dataBinding.setEmailTextChanged((s, start, before, count) -> {
+            dataBinding.registerEmail.setBackground(
+                    ContextCompat.getDrawable(this, R.drawable.textfield_bg));
+
+            if (Strings.isNullOrEmpty(s.toString())) {
+                dataBinding.registerEmail
+                        .setError("This field can't be blank");
+            }
+
+            if (isNotValid(s.toString(), Constants.Regex.EMAIL)) {
+                dataBinding.registerEmail.setError("Invalid email address");
+                return;
+            }
+            mRegisterViewModel.checkEmail(s.toString());
+        });
 
         mRegisterViewModel.getRegisterState().observe(this, state -> {
             if (state == null) {
@@ -54,10 +88,49 @@ public class RegisterActivity extends BaseActivity<ActivityRegisterBinding>
                 }
                 Boolean data = state.getData();
                 if (data != null && data) {
-                    finish();
+                    Intent intent = new Intent(RegisterActivity.this, RegistrationSuccessActivity.class);
+                    startActivity(intent);
                 }
             }
+            dataBinding.executePendingBindings();
+        });
 
+        mRegisterViewModel.getUsernameValidateState().observe(this, state -> {
+            if (state == null) {
+                dataBinding.registerUsername.setBackground(ContextCompat.getDrawable(this, R.drawable.textfield_bg));
+            } else {
+                String error = state.getErrorMessageIfNotHandled();
+                if (error != null) {
+                    dataBinding.registerUsername.setBackground(ContextCompat.getDrawable(this, R.drawable.textfield_error_bg));
+                    dataBinding.registerUsername.setError(error);
+                }
+                Boolean data = state.getData();
+                if (data != null && data) {
+                    dataBinding.registerUsername.setBackground(
+                            ContextCompat.getDrawable(this, R.drawable.textfield_correct_bg));
+                    mRegisterViewModel.setUsername(dataBinding.registerUsername.getText().toString());
+                }
+            }
+            dataBinding.executePendingBindings();
+        });
+
+        mRegisterViewModel.getEmailValidateState().observe(this, state -> {
+            if (state == null) {
+                dataBinding.registerEmail.setBackground(ContextCompat.getDrawable(this, R.drawable.textfield_bg));
+            } else {
+                String error = state.getErrorMessageIfNotHandled();
+                if (error != null) {
+                    dataBinding.registerEmail.setBackground(ContextCompat.getDrawable(this, R.drawable.textfield_error_bg));
+                    dataBinding.registerEmail.setError(error);
+                }
+                Boolean data = state.getData();
+                if (data != null && data) {
+                    dataBinding.registerEmail.setBackground(
+                            ContextCompat.getDrawable(this, R.drawable.textfield_correct_bg));
+                    mRegisterViewModel.setEmail(dataBinding.registerEmail.getText().toString());
+                }
+            }
+            dataBinding.executePendingBindings();
         });
     }
 
@@ -89,7 +162,7 @@ public class RegisterActivity extends BaseActivity<ActivityRegisterBinding>
     @Override
     public void newAfterTextChanged(Editable s) {
         if (s != null && s.toString().trim().length() > 0) {
-            if (isNotValid(s.toString())) {
+            if (isNotValid(s.toString(), Constants.Regex.PASSWORD)) {
                 dataBinding.registerPassword
                         .setError("Password must be 8~20 characters long and contain a digit.");
             }
@@ -104,8 +177,8 @@ public class RegisterActivity extends BaseActivity<ActivityRegisterBinding>
         }
     }
 
-    private boolean isNotValid(String field) {
-        Pattern pattern = Pattern.compile(Constants.Regex.PASSWORD);
+    private boolean isNotValid(String field, String regex) {
+        Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(field);
         return !matcher.matches();
     }

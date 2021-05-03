@@ -296,6 +296,18 @@ public class UserRepository {
         return refreshUsers.getLiveData();
     }
 
+    public LiveData<Resource<Boolean>> checkUsernameValidation(String input) {
+        UserTask.ValidateUsername validateUsername = UserTask.validateUsername(input, mUserResource);
+        mAppExecutors.networkIO().execute(validateUsername);
+        return validateUsername.getLiveData();
+    }
+
+    public LiveData<Resource<Boolean>> checkEmailValidation(String email) {
+        UserTask.ValidateEmail validateEmail = UserTask.validateEmail(email, mUserResource);
+        mAppExecutors.networkIO().execute(validateEmail);
+        return validateEmail.getLiveData();
+    }
+
 //    public LiveData<Resource<Followers<Profile>>> getFollowers(String url, long uid, long followerId) {
 //        UserTask.GetFollower getFollower = UserTask.getFollower(mUserResource, mDatabase, url, uid, followerId);
 //        mAppExecutors.networkIO().execute(getFollower);

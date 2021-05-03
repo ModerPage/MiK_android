@@ -5,23 +5,34 @@ import android.widget.TextView;
 import androidx.databinding.BindingAdapter;
 
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
 import me.modernpage.activity.R;
 import me.modernpage.util.App;
+import me.modernpage.util.Constants;
 
 public class PostViewBindingAdapter {
     private static final String TAG = "PostViewBindingAdapter";
+    static SimpleDateFormat dateFormat = new SimpleDateFormat(Constants.DATE_FORMAT_PATTERN, Locale.getDefault());
 
 
     @BindingAdapter("setDate")
     public static void setDate(TextView textView, Date date) {
         if (date == null)
             return;
-        long diffInMillies = System.currentTimeMillis() - date.getTime();
-        int diffInMinutes = (int) (diffInMillies / (1000 * 60));
+        org.joda.time.DateTime now = new org.joda.time.DateTime(); // Default time zone.
+        org.joda.time.DateTime zulu = now.toDateTime(org.joda.time.DateTimeZone.UTC);
+        long diffInMillis = 0;
+        try {
+            Date parse = dateFormat.parse(zulu.toString());
+            diffInMillis = parse.getTime() - date.getTime();
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        int diffInMinutes = (int) (diffInMillis / (1000 * 60));
         int diffInHours = diffInMinutes / 60;
         int diffInDays = diffInHours / 24;
         String dateText;

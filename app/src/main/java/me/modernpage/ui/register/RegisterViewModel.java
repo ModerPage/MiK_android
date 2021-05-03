@@ -24,18 +24,21 @@ public class RegisterViewModel extends ViewModel {
     private final MutableLiveData<String> confirmPassword;
     private final MutableLiveData<String> email;
     private final RegisterHandler mRegisterHandler;
+    private final UsernameCheckHandler mUsernameCheckHandler;
+    private final EmailCheckHandler mEmailCheckHandler;
     private final SavedStateHandle mSavedStateHandle;
 
     @Inject
     public RegisterViewModel(UserRepository userRepository, SavedStateHandle savedStateHandle) {
         mSavedStateHandle = savedStateHandle;
         mRegisterHandler = new RegisterHandler(userRepository);
+        mUsernameCheckHandler = new UsernameCheckHandler(userRepository);
+        mEmailCheckHandler = new EmailCheckHandler(userRepository);
         username = mSavedStateHandle.getLiveData("username");
         fullname = mSavedStateHandle.getLiveData("fullname");
         email = mSavedStateHandle.getLiveData("email");
         password = mSavedStateHandle.getLiveData("password");
         confirmPassword = mSavedStateHandle.getLiveData("confirmPassword");
-
     }
 
     public void setUsername(String username) {
@@ -78,6 +81,10 @@ public class RegisterViewModel extends ViewModel {
         return email;
     }
 
+    public void checkUsername(String value) {
+        mUsernameCheckHandler.validateUsername(value);
+    }
+
     public void register() {
         String username = this.username.getValue();
         String fullname = this.fullname.getValue();
@@ -94,10 +101,23 @@ public class RegisterViewModel extends ViewModel {
             return;
 
         mRegisterHandler.register(new RegisterRequest(username, fullname, email, password));
+
     }
 
     public LiveData<LoadState<Boolean>> getRegisterState() {
         return mRegisterHandler.getProcessState();
+    }
+
+    public LiveData<LoadState<Boolean>> getUsernameValidateState() {
+        return mUsernameCheckHandler.getProcessState();
+    }
+
+    public LiveData<LoadState<Boolean>> getEmailValidateState() {
+        return mEmailCheckHandler.getProcessState();
+    }
+
+    public void checkEmail(String email) {
+        mEmailCheckHandler.validateEmail(email);
     }
 
     static class RegisterHandler extends ProcessHandler<Boolean> {
@@ -111,6 +131,38 @@ public class RegisterViewModel extends ViewModel {
             unregister();
             data = repository.register(registerRequest);
             processState.setValue(new LoadState<Boolean>(true, true, null, null));
+            data.observeForever(this);
+        }
+    }
+
+    static class UsernameCheckHandler extends ProcessHandler<Boolean> {
+        private final UserRepository repository;
+
+        UsernameCheckHandler(UserRepository repository) {
+            reset();
+            this.repository = repository;
+        }
+
+        public void validateUsername(String username) {
+            unregister();
+            data = repository.checkUsernameValidation(username);
+            processState.setValue(new LoadState<>(true, true, null, null));
+            data.observeForever(this);
+        }
+    }
+
+    static class EmailCheckHandler extends ProcessHandler<Boolean> {
+        private final UserRepository repository;
+
+        EmailCheckHandler(UserRepository repository) {
+            reset();
+            this.repository = repository;
+        }
+
+        public void validateEmail(String email) {
+            unregister();
+            data = repository.checkEmailValidation(email);
+            processState.setValue(new LoadState<>(true, true, null, null));
             data.observeForever(this);
         }
     }

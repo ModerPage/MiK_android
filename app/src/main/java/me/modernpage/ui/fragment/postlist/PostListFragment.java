@@ -3,7 +3,6 @@ package me.modernpage.ui.fragment.postlist;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -23,6 +22,7 @@ import me.modernpage.activity.R;
 import me.modernpage.activity.databinding.FragmentPostListBinding;
 import me.modernpage.activity.databinding.LayoutPostMoreBottomSheetBinding;
 import me.modernpage.data.local.entity.LoadResult;
+import me.modernpage.data.local.entity.Post;
 import me.modernpage.data.local.entity.Profile;
 import me.modernpage.data.local.entity.relation.PostRelation;
 import me.modernpage.ui.BaseFragment;
@@ -30,6 +30,7 @@ import me.modernpage.ui.addedit.PostAddEditActivity;
 import me.modernpage.ui.common.BottomSheetHandler;
 import me.modernpage.ui.common.PostRecyclerViewScrollListener;
 import me.modernpage.ui.common.SpaceItemDecoration;
+import me.modernpage.ui.dialog.AppDialog;
 import me.modernpage.ui.dialog.PostReportDialog;
 import me.modernpage.ui.dialog.UserInfoDialog;
 import me.modernpage.ui.login.LoginActivity;
@@ -42,8 +43,10 @@ import me.modernpage.util.AutoClearedValue;
  * create an instance of this fragment.
  */
 @AndroidEntryPoint
-public class PostListFragment extends BaseFragment<PostListViewModel, FragmentPostListBinding> {
+public class PostListFragment extends BaseFragment<PostListViewModel, FragmentPostListBinding>
+        implements AppDialog.DialogEvents {
     private static final String TAG = "PostListFragment";
+    private static final int DIALOG_ID_DELETE = 101;
     private AutoClearedValue<PostListAdapter> adapter;
     private BottomSheetDialog bottomSheetDialog;
 
@@ -61,6 +64,27 @@ public class PostListFragment extends BaseFragment<PostListViewModel, FragmentPo
                 }
             }
     );
+
+    @Override
+    public void onPositiveDialogResult(int dialogId, Bundle args) {
+        if (dialogId == DIALOG_ID_DELETE) {
+            String postLoadUrl = requireArguments().getString(LoadResult.class.getSimpleName());
+            Post post = (Post) args.getSerializable(Post.class.getSimpleName());
+            if (post == null || postLoadUrl == null)
+                throw new AssertionError("Post data and/or load url not present");
+            viewModel.deletePost(postLoadUrl, post);
+        }
+    }
+
+    @Override
+    public void onNegativeDialogResult(int dialogId, Bundle args) {
+
+    }
+
+    @Override
+    public void onDialogCancelled(int dialogId) {
+
+    }
 
     private static class AddEditContract extends ActivityResultContract<PostRelation, Boolean> {
 
@@ -134,11 +158,25 @@ public class PostListFragment extends BaseFragment<PostListViewModel, FragmentPo
         moreBottomSheetBinding.setHandler(new BottomSheetHandler() {
             @Override
             public void deletePost(PostRelation post) {
-                post.getPost().setOwner(post.getOwner());
-                post.getPost().setGroup(post.getGroup());
-                viewModel.deletePost(postLoadResult, post.getPost());
                 if (bottomSheetDialog != null && bottomSheetDialog.isShowing())
                     bottomSheetDialog.dismiss();
+                Fragment prev = getChildFragmentManager().findFragmentByTag("deleteDialog");
+                FragmentTransaction ft = getChildFragmentManager().beginTransaction();
+                if (prev != null) {
+                    ft.remove(prev);
+                }
+                ft.addToBackStack(null);
+                AppDialog dialog = new AppDialog();
+                Bundle args = new Bundle();
+                args.putInt(AppDialog.DIALOG_ID, DIALOG_ID_DELETE);
+                args.putString(AppDialog.DIALOG_MESSAGE,
+                        getString(R.string.deldaig_message, "this post"));
+                args.putInt(AppDialog.DIALOG_POSITIVE_RID, R.string.deldiag_positive_caption);
+                post.getPost().setOwner(post.getOwner());
+                post.getPost().setGroup(post.getGroup());
+                args.putSerializable(Post.class.getSimpleName(), post.getPost());
+                dialog.setArguments(args);
+                dialog.show(ft, "deleteDialog");
             }
 
             @Override

@@ -84,6 +84,7 @@ public class LoginActivity extends BaseActivity<ActivityLoginBinding> implements
                     }
                     editor.putString(LOGIN_USERNAME, username != null ? username : savedUsername).apply();
                     Intent intent = new Intent(this, MainActivity.class);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
                     intent.putExtra(Profile.class.getSimpleName(), state.getData().getId());
                     startActivity(intent);
                     finish();

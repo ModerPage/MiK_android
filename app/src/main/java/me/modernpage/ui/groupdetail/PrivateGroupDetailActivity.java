@@ -37,6 +37,8 @@ public class PrivateGroupDetailActivity extends BaseActivity<ActivityPrivateGrou
         AppDialog.DialogEvents {
     private static final String TAG = "PrivateGroupDetailActiv";
     private static final int DIALOG_ID_JOIN_GROUP = 101;
+    private static final int DIALOG_ID_DELETE_LEAVE = 102;
+    private static final int DIALOG_ID_LEAVE_ID = 103;
     GroupDetailViewModel viewModel;
     private PrivateGroup group;
     private long uid;
@@ -189,19 +191,37 @@ public class PrivateGroupDetailActivity extends BaseActivity<ActivityPrivateGrou
                 }
                 break;
             case R.id.group_detail_menu_del_leave:
-                if (group != null) {
-                    viewModel.deleteGroup(group);
+                Fragment prev = getSupportFragmentManager().findFragmentByTag("deleteAndLeaveDialog");
+                FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+                if (prev != null) {
+                    ft.remove(prev);
                 }
+                AppDialog dialog = new AppDialog();
+                Bundle args = new Bundle();
+                args.putInt(AppDialog.DIALOG_ID, DIALOG_ID_DELETE_LEAVE);
+                args.putString(AppDialog.DIALOG_MESSAGE, getString(R.string.deleavediag_message));
+                args.putInt(AppDialog.DIALOG_POSITIVE_RID, R.string.deldiag_positive_caption);
+                dialog.setArguments(args);
+                dialog.show(ft, "deleteAndLeaveDialog");
                 break;
             case R.id.group_detail_menu_leave:
-                if (group != null) {
-                    viewModel.leaveGroup(group._members(), group.getId(), uid);
+                prev = getSupportFragmentManager().findFragmentByTag("leaveDialog");
+                ft = getSupportFragmentManager().beginTransaction();
+                if (prev != null) {
+                    ft.remove(prev);
                 }
+                dialog = new AppDialog();
+                args = new Bundle();
+                args.putInt(AppDialog.DIALOG_ID, DIALOG_ID_LEAVE_ID);
+                args.putString(AppDialog.DIALOG_MESSAGE, getString(R.string.leavediag_message));
+                args.putInt(AppDialog.DIALOG_POSITIVE_RID, R.string.leavediag_positive_caption);
+                dialog.setArguments(args);
+                dialog.show(ft, "leaveDialog");
                 break;
             case R.id.group_detail_menu_report:
                 if (group != null) {
-                    Fragment prev = getSupportFragmentManager().findFragmentByTag("groupReportDialog");
-                    FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+                    prev = getSupportFragmentManager().findFragmentByTag("groupReportDialog");
+                    ft = getSupportFragmentManager().beginTransaction();
                     if (prev != null) {
                         ft.remove(prev);
                     }
@@ -223,12 +243,25 @@ public class PrivateGroupDetailActivity extends BaseActivity<ActivityPrivateGrou
 
     @Override
     public void onPositiveDialogResult(int dialogId, Bundle args) {
-        viewModel.addMember(group._members(), group.getId(), uid);
+        if (group == null) throw new AssertionError("Group data is null");
+
+        switch (dialogId) {
+            case DIALOG_ID_JOIN_GROUP:
+                viewModel.addMember(group._members(), group.getId(), uid);
+                break;
+            case DIALOG_ID_DELETE_LEAVE:
+                viewModel.deleteGroup(group);
+                break;
+            case DIALOG_ID_LEAVE_ID:
+                viewModel.leaveGroup(group._members(), group.getId(), uid);
+                break;
+        }
     }
 
     @Override
     public void onNegativeDialogResult(int dialogId, Bundle args) {
-        finish();
+        if (dialogId == DIALOG_ID_JOIN_GROUP)
+            finish();
     }
 
     @Override

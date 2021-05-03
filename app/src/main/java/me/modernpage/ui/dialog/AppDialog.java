@@ -43,10 +43,13 @@ public class AppDialog extends AppCompatDialogFragment {
 
         // Activities containing this fragment must implement its callbacks
         if (!(context instanceof DialogEvents)) {
-            throw new ClassCastException(context.toString() + " must implement AppDialog.DialogEvents interface");
-        }
-
-        mDialogEvents = (DialogEvents) context;
+            if (getParentFragment() != null && (getParentFragment() instanceof DialogEvents))
+                mDialogEvents = (DialogEvents) getParentFragment();
+            else
+                throw new ClassCastException(context.toString() +
+                        " and/or parent fragment must implement AppDialog.DialogEvents interface");
+        } else
+            mDialogEvents = (DialogEvents) context;
     }
 
     @Override

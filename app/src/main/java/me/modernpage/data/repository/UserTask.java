@@ -95,6 +95,14 @@ public class UserTask {
         return new RefreshUsers(url, userResource, database);
     }
 
+    public static ValidateUsername validateUsername(String username, UserResource userResource) {
+        return new ValidateUsername(userResource, username);
+    }
+
+    public static ValidateEmail validateEmail(String email, UserResource userResource) {
+        return new ValidateEmail(userResource, email);
+    }
+
     static class CheckLogin implements Runnable {
         private final MutableLiveData<Resource<Profile>> mLiveData = new MutableLiveData<>();
         private final String username;
@@ -680,6 +688,69 @@ public class UserTask {
             } catch (IOException e) {
                 liveData.postValue(Resource.error(e.getMessage(), null));
 
+            }
+        }
+
+        public MutableLiveData<Resource<Boolean>> getLiveData() {
+            return liveData;
+        }
+    }
+
+    public static class ValidateUsername implements Runnable {
+        private final MutableLiveData<Resource<Boolean>> liveData = new MutableLiveData<>();
+        private final UserResource userResource;
+        private final String username;
+
+        public ValidateUsername(UserResource userResource, String username) {
+            this.userResource = userResource;
+            this.username = username;
+        }
+
+        @Override
+        public void run() {
+            try {
+                Response<ResponseUtil<Boolean>> response = userResource.validateUsername(username).execute();
+                ApiResponse<ResponseUtil<Boolean>> apiResponse = new ApiResponse<>(response);
+                if (apiResponse.isSuccessful()) {
+                    ResponseUtil<Boolean> result = apiResponse.body;
+                    liveData.postValue(Resource.success(result.getData()));
+                } else {
+                    liveData.postValue(Resource.error(apiResponse.errorMessage, null));
+                }
+            } catch (IOException e) {
+                liveData.postValue(Resource.error(e.getMessage(), null));
+            }
+        }
+
+        public MutableLiveData<Resource<Boolean>> getLiveData() {
+            return liveData;
+        }
+    }
+
+
+    public static class ValidateEmail implements Runnable {
+        private final MutableLiveData<Resource<Boolean>> liveData = new MutableLiveData<>();
+        private final UserResource userResource;
+        private final String email;
+
+        public ValidateEmail(UserResource userResource, String email) {
+            this.userResource = userResource;
+            this.email = email;
+        }
+
+        @Override
+        public void run() {
+            try {
+                Response<ResponseUtil<Boolean>> response = userResource.validateEmail(email).execute();
+                ApiResponse<ResponseUtil<Boolean>> apiResponse = new ApiResponse<>(response);
+                if (apiResponse.isSuccessful()) {
+                    ResponseUtil<Boolean> result = apiResponse.body;
+                    liveData.postValue(Resource.success(result.getData()));
+                } else {
+                    liveData.postValue(Resource.error(apiResponse.errorMessage, null));
+                }
+            } catch (IOException e) {
+                liveData.postValue(Resource.error(e.getMessage(), null));
             }
         }
 

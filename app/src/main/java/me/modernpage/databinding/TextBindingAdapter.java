@@ -65,7 +65,6 @@ public class TextBindingAdapter {
         if (before == null && after == null && on == null && emailTextAttrChanged == null) {
             newValue = null;
         } else {
-            Log.d(TAG, "setEmailTextWatcher: called");
             newValue = new TextWatcher() {
                 @Override
                 public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -105,13 +104,11 @@ public class TextBindingAdapter {
     public static void setUsernameText(EditText editText, String username) {
         if (username != null && !username.equals(editText.getText().toString())) {
             editText.setText(username);
-            Log.d(TAG, "setText: username " + username);
         }
     }
 
     @InverseBindingAdapter(attribute = "usernameText", event = "android:usernameTextAttrChanged")
     public static String getUsernameText(EditText editText) {
-        Log.d(TAG, "getUsernameText: called");
         if ((editText.getText() == null || "".equals(editText.getText().toString().trim()))) {
             editText.setError("This field can't be blank");
             return null;

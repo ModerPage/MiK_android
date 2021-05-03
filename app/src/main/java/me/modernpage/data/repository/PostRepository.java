@@ -281,7 +281,7 @@ public class PostRepository {
     }
 
     public LiveData<Resource<Boolean>> updatePost(String postUrl, Post post, File file) {
-        PostTask.UpdateTask updatePost = PostTask.updatePost(postUrl, post, file, mDatabase, postResource);
+        PostTask.UpdatePost updatePost = PostTask.updatePost(postUrl, post, file, mDatabase, postResource);
         mAppExecutors.networkIO().execute(updatePost);
         return updatePost.getLiveData();
     }

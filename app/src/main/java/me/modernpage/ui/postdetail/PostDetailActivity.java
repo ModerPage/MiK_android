@@ -2,10 +2,11 @@ package me.modernpage.ui.postdetail;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 
 import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.google.android.material.bottomsheet.BottomSheetDialog;
@@ -18,17 +19,20 @@ import me.modernpage.activity.databinding.LayoutPostMoreBottomSheetBinding;
 import me.modernpage.data.local.entity.Comment;
 import me.modernpage.data.local.entity.LoadResult;
 import me.modernpage.data.local.entity.Profile;
+import me.modernpage.data.local.entity.model.Link;
 import me.modernpage.data.local.entity.relation.PostRelation;
 import me.modernpage.ui.BaseActivity;
 import me.modernpage.ui.BaseDialog;
 import me.modernpage.ui.common.PostRecyclerViewScrollListener;
 import me.modernpage.ui.common.SpaceItemDecoration;
+import me.modernpage.ui.dialog.AppDialog;
 import me.modernpage.ui.login.LoginActivity;
 
 @AndroidEntryPoint
 public class PostDetailActivity extends BaseActivity<ActivityPostDetailBinding>
-        implements PostDetailHandler, BaseDialog.DialogEvents {
+        implements PostDetailHandler, BaseDialog.DialogEvents, AppDialog.DialogEvents {
     private static final String TAG = "PostDetailActivity";
+    private static final int DIALOG_ID_DELETE = 101;
     PostDetailViewModel viewModel;
     private BottomSheetDialog mBottomSheetDialog;
     private LayoutPostMoreBottomSheetBinding mMoreBottomSheetBinding;
@@ -54,10 +58,32 @@ public class PostDetailActivity extends BaseActivity<ActivityPostDetailBinding>
     @Override
     public void onPositiveDialogResult(int dialogId) {
 
+
     }
 
     @Override
     public void onNegativeDialogResult(int dialogId) {
+
+    }
+
+    @Override
+    public void onPositiveDialogResult(int dialogId, Bundle args) {
+        if (dialogId == DIALOG_ID_DELETE) {
+            String url = args.getString(Link.class.getSimpleName());
+            Comment comment = (Comment) args.getSerializable(Comment.class.getSimpleName());
+            if (url == null || comment == null)
+                throw new AssertionError("URL and/or Comment data not present");
+            viewModel.deleteComment(url, comment);
+        }
+    }
+
+    @Override
+    public void onNegativeDialogResult(int dialogId, Bundle args) {
+
+    }
+
+    @Override
+    public void onDialogCancelled(int dialogId) {
 
     }
 
@@ -68,7 +94,6 @@ public class PostDetailActivity extends BaseActivity<ActivityPostDetailBinding>
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
-        Log.d(TAG, "onCreate: called");
         super.onCreate(savedInstanceState);
         final PostRelation post;
         Bundle args = getIntent().getExtras();
@@ -102,7 +127,21 @@ public class PostDetailActivity extends BaseActivity<ActivityPostDetailBinding>
         }
 
         CommentListAdapter commentListAdapter = new CommentListAdapter(this.dataBindingComponent, comment -> {
-            viewModel.deleteComment(post.getPost()._comments(), comment.getComment());
+            Fragment prev = fragmentManager.findFragmentByTag("deleteDialog");
+            FragmentTransaction ft = fragmentManager.beginTransaction();
+            if (prev != null) {
+                ft.remove(prev);
+            }
+            ft.addToBackStack(null);
+            AppDialog appDialog = new AppDialog();
+            Bundle bundle = new Bundle();
+            bundle.putInt(AppDialog.DIALOG_ID, DIALOG_ID_DELETE);
+            bundle.putString(AppDialog.DIALOG_MESSAGE, getString(R.string.deldaig_message, "comment"));
+            bundle.putInt(AppDialog.DIALOG_POSITIVE_RID, R.string.deldiag_positive_caption);
+            bundle.putString(Link.class.getSimpleName(), post.getPost()._comments());
+            bundle.putSerializable(Comment.class.getSimpleName(), comment.getComment());
+            appDialog.setArguments(bundle);
+            appDialog.show(ft, "deleteDialog");
         }, uid);
 
         dataBinding.postDetailCommentRecview.setAdapter(commentListAdapter);
@@ -204,6 +243,7 @@ public class PostDetailActivity extends BaseActivity<ActivityPostDetailBinding>
                     }
                 }
             }
+            dataBinding.executePendingBindings();
         });
 
     }

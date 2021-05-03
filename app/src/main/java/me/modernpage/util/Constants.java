@@ -14,8 +14,8 @@ public class Constants {
 
     public static class Network {
         //        public static final String WS_ENDPOINT = "ws://localhost:8080/ws";
-//        public static final String ENDPOINT = "http://192.168.100.13:8080/";
-        public static final String ENDPOINT = "http://192.168.1.108:8080/";
+        public static final String ENDPOINT = "http://192.168.100.13:8080/";
+        //        public static final String ENDPOINT = "http://192.168.1.108:8080/";
         //        public static final String ENDPOINT = "http://192.168.43.223:8080/";
         public static final String ENDPOINT_POSTS = ENDPOINT + "posts";
         public static final String ENDPOINT_PRIVATE_GROUPS = ENDPOINT + "privategroups";

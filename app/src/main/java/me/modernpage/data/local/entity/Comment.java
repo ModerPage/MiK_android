@@ -8,6 +8,7 @@ import androidx.room.Ignore;
 import androidx.room.Index;
 import androidx.room.PrimaryKey;
 
+import java.io.Serializable;
 import java.util.Date;
 
 
@@ -22,7 +23,7 @@ import java.util.Date;
 //                    parentColumns = "PID",
 //                    childColumns = "POST_ID")
         })
-public class Comment {
+public class Comment implements Serializable {
     @PrimaryKey
     @ColumnInfo(name = "CID")
     private long id;

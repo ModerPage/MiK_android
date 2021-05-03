@@ -1,7 +1,5 @@
 package me.modernpage.data.repository;
 
-import android.util.Log;
-
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
@@ -50,8 +48,8 @@ public class PostTask {
         return new PostTask.LikeControl(url, postId, ownerId, database, postResource);
     }
 
-    public static UpdateTask updatePost(String postUrl, Post post, File file, MiKDatabase database, PostResource postResource) {
-        return new UpdateTask(postUrl, post, file, database, postResource);
+    public static UpdatePost updatePost(String postUrl, Post post, File file, MiKDatabase database, PostResource postResource) {
+        return new UpdatePost(postUrl, post, file, database, postResource);
     }
 
     public static FetchNextPage fetchNextPage(String url, PostResource postResource, MiKDatabase database) {
@@ -449,7 +447,7 @@ public class PostTask {
         }
     }
 
-    static class UpdateTask implements Runnable {
+    static class UpdatePost implements Runnable {
         private static final String TAG = "UpdateTask";
         private final MutableLiveData<Resource<Boolean>> mLiveData = new MutableLiveData<>();
         private final MiKDatabase mDatabase;
@@ -458,7 +456,7 @@ public class PostTask {
         private final Post mPost;
         private final File mFile;
 
-        UpdateTask(String postUrl, Post post, File file, MiKDatabase database, PostResource postResource) {
+        UpdatePost(String postUrl, Post post, File file, MiKDatabase database, PostResource postResource) {
             mPostsUrl = postUrl;
             mDatabase = database;
             mPostResource = postResource;

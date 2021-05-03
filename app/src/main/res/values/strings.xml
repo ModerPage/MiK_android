@@ -58,7 +58,7 @@
     <string name="like_counter_kplural">%dK\u0020Likes</string>
     <string name="post_detail_comment_hint">Write a comment...</string>
     <string name="ok">OK</string>
-    <string name="cancel" />
+    <string name="cancel">Cancel</string>
     <string name="email_input_positive_caption">Next</string>
     <string name="email_input_negaitve_caption">Cancel</string>
     <string name="new_password">new password</string>
@@ -73,4 +73,9 @@
     <string name="cancelEditDiag_negative_caption">Discard changes</string>
     <string name="JoinGroupDiag_Positive_Caption">Join</string>
     <string name="JoinGroupDiag_Negative_Caption">Cancel</string>
+    <string name="deldaig_message">Are you sure you want to delete %s?</string>
+    <string name="deleavediag_message">Are you sure you want to delete and leave this group?</string>
+    <string name="leavediag_message">Are you sure you want to leave this group?</string>
+    <string name="deldiag_positive_caption">Delete</string>
+    <string name="leavediag_positive_caption">Leave</string>
 </resources>

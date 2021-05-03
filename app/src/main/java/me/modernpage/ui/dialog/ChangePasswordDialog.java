@@ -94,7 +94,6 @@ public class ChangePasswordDialog extends BaseDialog<DialogChangePasswordBinding
                 }
                 Boolean data = state.getData();
                 if (data != null && data) {
-                    Log.d(TAG, "onCreateDialog: data called");
                     dataBinding.changePasswordCurrent.setBackground(
                             ContextCompat.getDrawable(getContext(), R.drawable.textfield_correct_bg));
                 }

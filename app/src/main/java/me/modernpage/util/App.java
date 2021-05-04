@@ -25,4 +25,6 @@ public class App extends Application {
     public static Resources getResource() {
         return mResource;
     }
+
+
 }
